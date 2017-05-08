@@ -5,12 +5,12 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 
-#include "courage.h"
+#include "game_core.h"
 
 namespace fs = std::experimental::filesystem::v1;
 
-const char* libraryPath = strcat(SDL_GetBasePath(), "courage.dll");
-const char* libraryTempPath = strcat(SDL_GetBasePath(), "courage_temp.dll");
+const char* libraryPath = strcat(SDL_GetBasePath(), "persevere-core.dll");
+const char* libraryTempPath = strcat(SDL_GetBasePath(), "persevere-core-temp.dll");
 
 const char* lockPath = strcat(SDL_GetBasePath(), "lock.tmp");
 
@@ -66,7 +66,7 @@ int main(int, char**)
 	fs::file_time_type lastWriteTime = fs::last_write_time(libraryPath);
 	while (1) {
 		const auto writeTime = fs::last_write_time(libraryPath);
-		if (writeTime != lastWriteTime) {
+		if (!fs::exists(strcat(SDL_GetBasePath(), "persevere-core.lock")) && writeTime != lastWriteTime) {
 			lastWriteTime = writeTime;
 			UnloadCourage();
 			LoadCourage();

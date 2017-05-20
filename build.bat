@@ -2,7 +2,7 @@
 
 SET CC="clang++"
 
-SET CFLAGS=-Wall -Wextra -Wno-long-long -Wno-variadic-macros -fexceptions -std=c++14 -target i686-w32-windows-gnu -pedantic -DDEBUG -Xclang -flto-visibility-public-std
+SET CFLAGS=-Wall -Wextra -Werror -Wno-long-long -Wno-variadic-macros -fexceptions -std=c++14 -target i686-w32-windows-gnu -pedantic -DDEBUG -Xclang -flto-visibility-public-std
 
 SET SYSINCLUDE=-Ic:/users/charles.waldner/projects/persevere/include/sdl2 -Ic:\mingw\bin\../lib/gcc/mingw32/5.3.0/include/c++ -Ic:\mingw\bin\../lib/gcc/mingw32/5.3.0/include/c++/mingw32 -Ic:\mingw\bin\../lib/gcc/mingw32/5.3.0/include/c++/backward -Ic:\mingw\bin\../lib/gcc/mingw32/5.3.0/include -Ic:\mingw\bin\../lib/gcc/mingw32/5.3.0/../../../../include -Ic:\mingw\bin\../lib/gcc/mingw32/5.3.0/include-fixed
 

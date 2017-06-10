@@ -15,7 +15,7 @@
 
 const std::string basePath = std::string(SDL_GetBasePath());
 
-typedef void game_loop(void);
+typedef void game_loop(SDL_Surface* surface);
 
 struct game
 {
@@ -24,13 +24,13 @@ struct game
   game_loop* GameLoop;
 };
 
-int FileExists(const std::string filename)
+static int FileExists(const std::string filename)
 {
   struct stat result;
   return stat(filename.c_str(), &result) == 0;
 }
 
-time_t GetLastWriteTime(const std::string filename)
+static time_t GetLastWriteTime(const std::string filename)
 {
   struct stat result;
   if (stat(filename.c_str(), &result) == 0)
@@ -41,8 +41,9 @@ time_t GetLastWriteTime(const std::string filename)
   return 0;
 }
 
-void CopyFile(const std::string from, const std::string to)
+static void CopyFile(const std::string from, const std::string to)
 {
+  printf("Copying %s to %s\n", from.c_str(), to.c_str());
   std::ifstream source(from, std::ios::binary);
   std::ofstream destination(to, std::ios::binary | std::ios::trunc);
   destination << source.rdbuf();
@@ -52,6 +53,7 @@ void CopyFile(const std::string from, const std::string to)
 
 void UnloadGame(game* game)
 {
+  printf("Unloading Library\n");
   SDL_UnloadObject(game->library);
   game->library = 0;
   game->GameLoop = 0;
@@ -61,7 +63,7 @@ void UnloadGame(game* game)
 void LoadGame(const std::string libraryName, game* game)
 {
   const std::string basePath = std::string(SDL_GetBasePath());
-  const std::string lockPath = basePath + "lock.tmp";
+  const std::string lockPath = basePath + "persevere-core.lock";
   const std::string libraryPath = basePath + libraryName;
   const std::string libraryTempPath = basePath + "temp-" + libraryName;
 
@@ -78,6 +80,7 @@ void LoadGame(const std::string libraryName, game* game)
       printf("Can't load library: %s\n", error);
       return;
     }
+    printf("Loaded Library\n");
 
     game->GameLoop = (game_loop*)SDL_LoadFunction(game->library, "GameLoop");
     if (!game->GameLoop)
@@ -85,6 +88,12 @@ void LoadGame(const std::string libraryName, game* game)
       const char* error = SDL_GetError();
       printf("Can't load function: %s\n", error);
     }
+
+    printf("Loaded Function!\n");
+  }
+  else
+  {
+    printf("%s exists\n", lockPath.c_str());
   }
   return;
 }
@@ -96,9 +105,9 @@ void LoadGameIfNew(const std::string libraryName, game* game)
 
   if (writeTime > game->lastWriteTime)
   {
-    printf("Loading dll");
     UnloadGame(game);
     LoadGame(libraryName, game);
-    game->lastWriteTime = writeTime;
+    if (game->GameLoop)
+      game->lastWriteTime = writeTime;
   }
 }

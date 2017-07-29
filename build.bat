@@ -2,6 +2,7 @@
 
 SET CC="gcc"
 
+SET CFLAGS=-Wno-long-long -Wno-variadic-macros -fexceptions -std=c11 -pedantic
 
 SET SYSINCLUDE=-Ic:/users/charles.waldner/projects/persevere/include/sdl2 -Ic:\mingw\bin\../lib/gcc/mingw32/5.3.0/include -Ic:\mingw\bin\../lib/gcc/mingw32/5.3.0/../../../../include -Ic:\mingw\bin\../lib/gcc/mingw32/5.3.0/include-fixed
 

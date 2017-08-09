@@ -12,18 +12,22 @@
 #define stat _stat
 #endif
 
-#include "SDL.h"
-#include "common.h"
+#include "SDL2/SDL.h"
+
+#include "nerd_file.h"
+#include "nerd_string.h"
 
 
+typedef void game_init_func(void *game_state);
 typedef void game_loop_func(void *game_state);
 
-typedef struct
+struct game
 {
     void *library;
     time_t last_write_time;
+    game_init_func *game_init;
     game_loop_func *game_loop;
-} game;
+};
 
 
 static time_t get_last_write_time(char *filename)
@@ -38,7 +42,7 @@ static time_t get_last_write_time(char *filename)
 }
 
 
-void unload_game(game *game)
+void unload_game(struct game *game)
 {
     printf("Unloading Library\n");
     SDL_UnloadObject(game->library);
@@ -47,7 +51,7 @@ void unload_game(game *game)
 }
 
 
-void load_game(char *library_name, game *game)
+void load_game(char *library_name, struct game *game)
 {
     char *base_path = SDL_GetBasePath();
     char *lock_path = string_new(base_path);
@@ -75,8 +79,9 @@ void load_game(char *library_name, game *game)
 	}
 	printf("Loaded Library\n");
 
-	game->game_loop = (game_loop_func *)SDL_LoadFunction(game->library, "GameLoop");
-	if (game->game_loop == NULL)
+	game->game_init = (game_init_func *)SDL_LoadFunction(game->library, "game_init");
+	game->game_loop = (game_loop_func *)SDL_LoadFunction(game->library, "game_loop");
+	if (game->game_loop == NULL || game->game_init == NULL)
 	{
 	    const char *error = SDL_GetError();
 	    printf("Can't load function: %s\n", error);
@@ -97,7 +102,7 @@ void load_game(char *library_name, game *game)
 }
 
 
-void load_game_if_new(char *library_name, game *game)
+void load_game_if_new(char *library_name, struct game *game)
 {
     char *base_path = SDL_GetBasePath();
     char *library_path = string_new(base_path);

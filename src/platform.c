@@ -2,16 +2,15 @@
 #include <string.h>
 
 #define SDL_MAIN_HANDLED
-#include "SDL.h"
+#include "SDL2/SDL.h"
 
 #include "dynamic_library.c"
 
-#include "common.h"
 #include "mixer.h"
 #include "game_core.h"
 
 
-static game_state g_game_state;
+static struct game_state g_game_state;
 
 
 static void render_surface(SDL_Window *window, SDL_Surface *surface)
@@ -63,7 +62,7 @@ static void close_game_controller(SDL_JoystickID joystick_id)
     if (g_game_state.controllers[controller_index].controller)
 	SDL_GameControllerClose(g_game_state.controllers[controller_index].controller);
 
-    g_game_state.controllers[controller_index] = (const game_controller){0};
+    g_game_state.controllers[controller_index] = (const struct game_controller){0};
 }
 
 
@@ -134,7 +133,7 @@ static void audio_callback(void *userdata, uint8 *stream, int32 len)
 }
 
 
-static void lock_handler(mixer_event *e)
+static void lock_handler(struct mixer_event *e)
 {
     switch (e->type)
     {
@@ -170,7 +169,7 @@ static void init_audio()
 
     SDL_PauseAudioDevice(g_game_state.audio_device, 0);
 
-    mixer_source *src = mixer_new_source_from_file("chopin.ogg");
+    struct mixer_source *src = mixer_new_source_from_file("chopin.ogg");
     if (!src)
     {
 	SDL_Log("Failed to create source");
@@ -201,12 +200,15 @@ int main()
     SDL_FreeSurface(surface);
     SDL_Log("Surface Rendered");
 
-    game game;
+    struct game game;
     char *library_name = "persevere-core.dll";
 
     init_audio();
     open_all_game_controllers();
 
+    load_game_if_new(library_name, &game);
+    game.game_init(&g_game_state);
+    
     while (handle_events())
     {
 	load_game_if_new(library_name, &game);

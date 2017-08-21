@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include "nerd_math.h"
+#include "nerd_memory.h"
 
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <unistd.h>
@@ -17,13 +18,6 @@
 #endif
 
 #define file_t FILE
-
-size_t file_length(file_t *f);
-int    file_compare(char *fname1, char *fname2);
-bool   file_equals(char *fname1, char *fname2);
-bool   file_exists(char *f);
-file_t file_open(char *f);
-time_t file_timestamp(char *f);
 
 static int file_compare_internal(file_t *f1, file_t *f2);
 
@@ -114,6 +108,34 @@ bool file_exists(char *fname)
 {
     struct stat buf;
     return stat(fname, &buf) == 0;
+}
+
+
+char *file_cstr(char *fname, size_t *length)
+{
+    file_t *f = fopen(fname, "rb");
+    char *buf;
+    size_t len, read_len;
+
+    if (f == NULL) return NULL;
+
+    len = file_length(f);
+    buf = (char *)malloc(len+1);
+    read_len = fread(buf, 1, len, f);
+
+    if (read_len == len)
+    {
+	if (length) *length = len;
+	buf[len] = 0;
+    }
+    else
+    {
+	free(buf);
+	buf = NULL;
+    }
+
+    fclose(f);
+    return buf;
 }
 
 

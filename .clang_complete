@@ -1,14 +1,10 @@
 -std=c99
--target
-i686-w64-windows-gnu
 -Wall
 -Wextra
 -Wfloat-equal
 -Wundef
 -Wshadow
 -Wpointer-arith
--isystem
-c:/msys64/mingw32/bin/../lib/clang/4.0.0/include/
 -isystem
 c:/msys64/mingw32/include
 -isystem

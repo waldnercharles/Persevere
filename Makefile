@@ -1,5 +1,4 @@
 CC          = gcc
-CP          = cp -n
 CFLAGS      = -g -Wall -Wextra -Wfloat-equal -Wundef -Wshadow -Wpointer-arith -std=c99
 
 ROOT        = c:/msys64/mingw32
@@ -8,6 +7,7 @@ BIN         = bin
 SRC         = src
 INCLUDE     = include
 RESOURCES   = resources
+SHADERS     = shaders
 
 SYS_INCLUDE = -isystem $(ROOT)/include -isystem $(INCLUDE)
 
@@ -20,11 +20,12 @@ game: $(SRC)/game_core.c
 	@$(RM) $(PRJ)-core.lock
 
 platform: $(SRC)/platform.c
-	@$(CC) $(CFLAGS) $(SYS_INCLUDE) $(SRC)/platform.c -o $(BIN)/$(PRJ).exe -lSDL2 -lSDL2main
+	@$(CC) $(CFLAGS) $(SYS_INCLUDE) $(SRC)/platform.c -o $(BIN)/$(PRJ).exe -lSDL2 -lSDL2main -lopengl32 -lglew32
 
 resources:
-	@$(CP) $(ROOT)/bin/SDL2.dll $(BIN)
-	@$(CP) $(RESOURCES)/* $(BIN)
+	@cp -n $(ROOT)/bin/SDL2.dll $(BIN)
+	@cp -n $(RESOURCES)/* $(BIN)
+	@cp $(SHADERS)/* $(BIN)
 
 clean:
 	@$(RM) $(BIN)/$(PRJ).exe

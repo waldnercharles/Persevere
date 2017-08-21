@@ -30,6 +30,6 @@ struct game_state
 
 
 void game_init(struct game_state *game_state);
-void game_loop(struct game_state *game_state);
+void game_loop(struct game_state *game_state, float dt);
 
 #endif

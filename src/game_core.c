@@ -1,26 +1,6 @@
 #include "game_core.h"
+
 #include "nerd_memory.h"
-
-void render_gradient(SDL_Surface *surface, int x_offset, int y_offset)
-{
-    SDL_LockSurface(surface);
-    uint8_t *row = (uint8_t *)surface->pixels;
-
-    for (int y = 0; y < surface->h; ++y)
-    {
-	uint32_t *pixel = (uint32_t *)row;  
-	for (int x = 0; x < surface->w; ++x)
-	{
-	    uint8_t blue = (x + x_offset);
-	    uint8_t green = (y + y_offset);
-
-	    *pixel++ = ((green << 8) | blue);
-	}
-	row += surface->pitch;
-    }
-
-    SDL_UnlockSurface(surface);
-}
 
 struct position
 {
@@ -65,9 +45,8 @@ void game_init(struct game_state *game_state)
     echo_system_watch_component(game_state->echo, movement_system, velocity_component);
 
     echo_init(game_state->echo);
-    
 
-    
+
     struct position pos;
     struct velocity vel;
 
@@ -91,7 +70,7 @@ void game_init(struct game_state *game_state)
 }
 
 
-void game_loop(struct game_state *game_state)
+void game_loop(struct game_state *game_state, float dt)
 {
     static int flip;
     flip = !flip;
@@ -99,5 +78,5 @@ void game_loop(struct game_state *game_state)
 		    game_state->x_offset += flip,
 		    game_state->y_offset += flip);
 
-    //echo_process(game_state->echo, 1.0/60.0);
+    //echo_process(game_state->echo, dt);
 }

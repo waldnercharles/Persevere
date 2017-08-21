@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "stb_vorbis.c"
+#include "stb_vorbis.h"
 #include "nerd_memory.h"
 
 #define MIXER_BUFFER_SIZE       (512)

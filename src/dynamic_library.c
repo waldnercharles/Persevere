@@ -19,7 +19,7 @@
 
 
 typedef void game_init_func(void *game_state);
-typedef void game_loop_func(void *game_state);
+typedef void game_loop_func(void *game_state, float dt);
 
 struct game
 {

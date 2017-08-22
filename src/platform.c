@@ -1,14 +1,23 @@
+#define SDL_MAIN_HANDLED
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include <stdio.h>
 #include <string.h>
 
-#define SDL_MAIN_HANDLED
+#include "gl/glew.h"
+
 #include "SDL2/SDL.h"
+#include "SDL2/SDL_opengl.h"
+
+#include "stb_image.h"
 
 #include "dynamic_library.c"
-
-#include "mixer.h"
 #include "game_core.h"
 
+#include "nerd_math.h"
+#include "nerd_memory.h"
+#include "nerd_mixer.h"
 
 static struct game_state g_game_state;
 
@@ -185,14 +194,82 @@ int main()
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER);
 
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    
     SDL_Window *window = SDL_CreateWindow("Persevere",
 					  SDL_WINDOWPOS_UNDEFINED,
 					  SDL_WINDOWPOS_UNDEFINED,
-					  1280,
-					  720,
-					  SDL_WINDOW_RESIZABLE);
+					  480,
+					  480,
+					  SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
-    /* Get the window surface, make a copy of it and update the window */
+    SDL_GLContext context = SDL_GL_CreateContext(window);
+
+    glewExperimental = true;
+    glewInit();
+
+    SDL_GL_SetSwapInterval(1); 
+
+    uint shader_program = glCreateProgram();
+
+    uint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    const char *vertex_shader_src = file_cstr("vertex.glsl", NULL);
+
+    glShaderSource(vertex_shader, 1, &vertex_shader_src, NULL);
+    glCompileShader(vertex_shader);
+    glAttachShader(shader_program, vertex_shader);
+
+    uint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    const char *fragment_shader_src = file_cstr("fragment.glsl", NULL);
+
+    glShaderSource(fragment_shader, 1, &fragment_shader_src, NULL);
+    glCompileShader(fragment_shader);
+    glAttachShader(shader_program, fragment_shader);
+
+    glLinkProgram(shader_program);
+
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
+
+    float vertices[] =
+    {
+	// position          // colors
+	+0.5f, +0.5f, 0.0f,  1.0f, 0.0f, 0.0f, 1.0f, // top right
+	+0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f, 1.0f, // bottom right
+	-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f, 1.0f, // bottom left
+	-0.5f, +0.5f, 0.0f,  1.0f, 1.0f, 1.0f, 0.0f  // top left
+    };
+
+    uint indices[] =
+    {
+	0, 1, 3,
+	1, 2, 3
+    };
+
+    uint VBO, VAO, EBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    /* get the window surface, make a copy of it and update the window */
     SDL_Surface *surface = SDL_GetWindowSurface(window);
 
     g_game_state.pixel_buffer = SDL_ConvertSurfaceFormat(surface, surface->format->format, 0);
@@ -206,16 +283,49 @@ int main()
     init_audio();
     open_all_game_controllers();
 
-    load_game_if_new(library_name, &game);
+    load_game(library_name, &game);
     game.game_init(&g_game_state);
+
+    uint current_time, new_time, frame_time, accumulator;
+    const uint time_step = 16;
+
+    current_time = SDL_GetTicks();
+    accumulator = 0.0f;
     
     while (handle_events())
     {
 	load_game_if_new(library_name, &game);
-	render_surface(window, g_game_state.pixel_buffer);
 	
 	if (!game.game_loop) { continue; }
-	game.game_loop(&g_game_state);
+
+	new_time = SDL_GetTicks();
+
+	frame_time = new_time - current_time;
+	frame_time = math_max(frame_time, 250);
+
+	current_time = new_time;
+	accumulator += frame_time;
+
+	while (accumulator >= time_step)
+	{
+	    // TODO: previous_physics_state = current_physics_state;
+	    // TODO: physics(current_physics_state, dt);
+	    accumulator -= time_step;
+	}
+
+	// TODO: lerped_physics_state = lerp(current_physics_state, previous_physics_state);
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glUseProgram(shader_program);
+	glBindVertexArray(VAO);
+
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	
+	game.game_loop(&g_game_state, frame_time / 1000.0f);
+
+	SDL_GL_SwapWindow(window);
+	// render_surface(window, g_game_state.pixel_buffer);
     }
 
     close_all_game_controllers();

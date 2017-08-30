@@ -1,13 +1,10 @@
 #include "game_core.h"
 
-#include "nerd_memory.h"
-
 struct position
 {
     float x, y;
 };
 static uint position_component;
-
 
 struct velocity
 {
@@ -29,23 +26,20 @@ static void movement_system_process(struct echo *echo, uint entity, float dt)
     printf("%i moved to (%f, %f)\n", entity, pos->x, pos->y);
 }
 
-
-void game_init(struct game_state *game_state)
+void game_init(struct game *game)
 {
-    game_state->echo = malloc(sizeof(struct echo));
-    memset(game_state->echo, 0, sizeof(struct echo));
+    game->echo = malloc(sizeof(struct echo));
+    memset(game->echo, 0, sizeof(struct echo));
 
-    echo_component_create(game_state->echo, "position", sizeof(struct position), &position_component);
-    echo_component_create(game_state->echo, "velocity", sizeof(struct velocity), &velocity_component);
+    echo_component_create(game->echo, "position", sizeof(struct position), &position_component);
+    echo_component_create(game->echo, "velocity", sizeof(struct velocity), &velocity_component);
 
-    
     uint movement_system;
-    echo_system_create(game_state->echo, "movement", movement_system_process, &movement_system);
-    echo_system_watch_component(game_state->echo, movement_system, position_component);
-    echo_system_watch_component(game_state->echo, movement_system, velocity_component);
+    echo_system_create(game->echo, "movement", movement_system_process, &movement_system);
+    echo_system_watch_component(game->echo, movement_system, position_component);
+    echo_system_watch_component(game->echo, movement_system, velocity_component);
 
-    echo_init(game_state->echo);
-
+    echo_init(game->echo);
 
     struct position pos;
     struct velocity vel;
@@ -53,30 +47,22 @@ void game_init(struct game_state *game_state)
     uint e1;
     pos.x = 7.5f, pos.y = 1.0f;
     vel.x = 1.2f, vel.y = 3.14f;
-    echo_entity_create(game_state->echo, &e1);
-    echo_entity_set_component(game_state->echo, e1, position_component, &pos);
-    echo_entity_set_component(game_state->echo, e1, velocity_component, &vel);
-    echo_entity_set_state(game_state->echo, e1, ECHO_ENTITY_ADDED);
+    echo_entity_create(game->echo, &e1);
+    echo_entity_set_component(game->echo, e1, position_component, &pos);
+    echo_entity_set_component(game->echo, e1, velocity_component, &vel);
+    echo_entity_set_state(game->echo, e1, ECHO_ENTITY_ADDED);
     printf("pos: (%f, %f)\n", pos.x, pos.y);
 
     uint e2;
     pos.x = 5.0f, pos.y = 4.0f;
     vel.x = 1.0f, vel.y = -9.81f;
-    echo_entity_create(game_state->echo, &e2);
-    echo_entity_set_component(game_state->echo, e2, position_component, &pos);
-    echo_entity_set_component(game_state->echo, e2, velocity_component, &vel);
-    echo_entity_set_state(game_state->echo, e2, ECHO_ENTITY_ADDED);
-    
+    echo_entity_create(game->echo, &e2);
+    echo_entity_set_component(game->echo, e2, position_component, &pos);
+    echo_entity_set_component(game->echo, e2, velocity_component, &vel);
+    echo_entity_set_state(game->echo, e2, ECHO_ENTITY_ADDED);
 }
 
-
-void game_loop(struct game_state *game_state, float dt)
+void game_loop(struct game *game, float dt)
 {
-    static int flip;
-    flip = !flip;
-    render_gradient(game_state->pixel_buffer,
-		    game_state->x_offset += flip,
-		    game_state->y_offset += flip);
-
-    //echo_process(game_state->echo, dt);
+    // echo_process(game_state->echo, dt);
 }

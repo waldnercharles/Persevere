@@ -1,15 +1,14 @@
 #pragma once
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
-
-#include "stb_vorbis.h"
+#include "nerd.h"
+#include "nerd_file.h"
+#include "nerd_math.h"
 #include "nerd_memory.h"
 
-#define MIXER_BUFFER_SIZE       (512)
-#define MIXER_BUFFER_MASK       (MIXER_BUFFER_SIZE - 1)
+#include "stb_vorbis.h"
+
+#define MIXER_BUFFER_SIZE (512)
+#define MIXER_BUFFER_MASK (MIXER_BUFFER_SIZE - 1)
 
 struct mixer_event
 {
@@ -32,23 +31,23 @@ struct mixer_source_info
 
 struct mixer_source
 {
-    struct mixer_source *next;        /* Next source in list */
-    int16 buffer[MIXER_BUFFER_SIZE];  /* Internal buffer with raw stereo PCM */
-    mixer_event_handler handler;      /* Event handler */
-    void *udata;                      /* Stream's udata (from Mixer_SourceInfo) */
-    int samplerate;                   /* Stream's native samplerate */
-    int length;                       /* Stream's length in frames */
-    int end;                          /* End index for the current play-through */
-    int state;                        /* Current state (playing|paused|stopped) */
-    int64 position;                   /* Current playhead position (fixed point) */
-    int lgain, rgain;                 /* Left and right gain (fixed point) */
-    int rate;                         /* Playback rate (fixed point) */
-    int nextfill;                     /* Next frame idx where the buffer needs to be filled */
-    int loop;                         /* Whether the source will loop when `end` is reached */
-    int rewind;                       /* Whether the source will rewind before playing */
-    int active;                       /* Whether the source is part of `sources` list */
-    double gain;                      /* Gain set by `mixer_set_gain()` */
-    double pan;                       /* Pan set by `mixer_set_pan()` */
+    struct mixer_source *next;       /* Next source in list */
+    int16 buffer[MIXER_BUFFER_SIZE]; /* Internal buffer with raw stereo PCM */
+    mixer_event_handler handler;     /* Event handler */
+    void *udata;                     /* Stream's udata (from Mixer_SourceInfo) */
+    int samplerate;                  /* Stream's native samplerate */
+    int length;                      /* Stream's length in frames */
+    int end;                         /* End index for the current play-through */
+    int state;                       /* Current state (playing|paused|stopped) */
+    int64 position;                  /* Current playhead position (fixed point) */
+    int lgain, rgain;                /* Left and right gain (fixed point) */
+    int rate;                        /* Playback rate (fixed point) */
+    int nextfill;                    /* Next frame idx where the buffer needs to be filled */
+    int loop;                        /* Whether the source will loop when `end` is reached */
+    int rewind;                      /* Whether the source will rewind before playing */
+    int active;                      /* Whether the source is part of `sources` list */
+    double gain;                     /* Gain set by `mixer_set_gain()` */
+    double pan;                      /* Pan set by `mixer_set_pan()` */
 };
 
 enum
@@ -67,125 +66,121 @@ enum
     MIXER_EVENT_REWIND
 };
 
-const char *mixer_get_error(void);
-void mixer_init(int samplerate);
-void mixer_set_lock(mixer_event_handler lock);
-void mixer_set_master_gain(double gain);
-void mixer_process(int16 *destination, int length);
- 
-struct mixer_source *mixer_new_source(const struct mixer_source_info *info);
-struct mixer_source *mixer_new_source_from_file(const char *filename);
-struct mixer_source *mixer_new_source_from_mem(void *data, int size);
-void mixer_destroy_source(struct mixer_source *source);
+struct mixer
+{
+    const char *lasterror;           /* Last error message */
+    mixer_event_handler lock;        /* Event handler for lock/unlock events */
+    struct mixer_source *sources;    /* Linked list of active (playing) sources */
+    int32 buffer[MIXER_BUFFER_SIZE]; /* Internal master buffer */
+    int samplerate;                  /* Master samplerate */
+    int gain;                        /* Master gain (fixed point) */
+};
+
+const char *mixer_get_error(struct mixer *mixer);
+void mixer_init(struct mixer *mixer, int samplerate);
+void mixer_set_lock(struct mixer *mixer, mixer_event_handler lock);
+void mixer_set_master_gain(struct mixer *mixer, double gain);
+void mixer_process(struct mixer *mixer, int16 *destination, int length);
+
+struct mixer_source *mixer_new_source(struct mixer *mixer, const struct mixer_source_info *info);
+struct mixer_source *mixer_new_source_from_file(struct mixer *mixer, const char *filename);
+struct mixer_source *mixer_new_source_from_mem(struct mixer *mixer, void *data, int size);
+void mixer_destroy_source(struct mixer *mixer, struct mixer_source *source);
 double mixer_get_length(struct mixer_source *source);
 double mixer_get_position(struct mixer_source *source);
 int mixer_get_state(struct mixer_source *source);
 void mixer_set_gain(struct mixer_source *source, double gain);
 void mixer_set_pan(struct mixer_source *source, double pan);
-void mixer_set_pitch(struct mixer_source *source, double pitch);
+void mixer_set_pitch(struct mixer *mixer, struct mixer_source *source, double pitch);
 void mixer_set_loop(struct mixer_source *source, int loop);
-void mixer_play(struct mixer_source *source);
+void mixer_play(struct mixer *mixer, struct mixer_source *source);
 void mixer_pause(struct mixer_source *source);
 void mixer_stop(struct mixer_source *source);
 
-static const char *mixer__error(const char *msg);
+static const char *mixer__error(struct mixer *mixer, const char *msg);
 static void mixer__dummy_handler(struct mixer_event *event);
-static void mixer__lock(void);
-static void mixer__unlock(void);
+static void mixer__lock(struct mixer *mixer);
+static void mixer__unlock(struct mixer *mixer);
 
 static void mixer__rewind_source(struct mixer_source *source);
 static void mixer__fill_source_buffer(struct mixer_source *source, int offset, int length);
-static void mixer__process_source(struct mixer_source *source, int length);
+static void mixer__process_source(struct mixer *mixer, struct mixer_source *source, int length);
 static int mixer__check_header(void *data, int size, const char *str, int offset);
-static struct mixer_source *mixer__new_source_from_mem(void *data, int size, int ownsdata);
-static void *mixer__load_file(const char *filename, int *size);
 static void mixer__recalculate_source_gain(struct mixer_source *source);
-static const char *mixer__ogg_init(struct mixer_source_info *info, void *data, int length, int ownsdata);
+
+static struct mixer_source *mixer__new_source_from_mem(struct mixer *mixer,
+                                                       void *data,
+                                                       int size,
+                                                       int ownsdata);
+
+static const char *mixer__ogg_init(struct mixer *mixer,
+                                   struct mixer_source_info *info,
+                                   void *data,
+                                   int length,
+                                   int ownsdata);
+
 static void mixer__ogg_handler(struct mixer_event *e);
 
-#define UNUSED(x)         ((void) (x))
-#define CLAMP(x, a, b)    ((x) < (a) ? (a) : (x) > (b) ? (b) : (x))
-#define MIN(a, b)         ((a) < (b) ? (a) : (b))
-#define MAX(a, b)         ((a) > (b) ? (a) : (b))
+#define UNUSED(x) ((void)(x))
 
-/* Binary Fixed Point */
-#define FX_BITS           (12)
-#define FX_UNIT           (1 << FX_BITS)
-#define FX_MASK           (FX_UNIT - 1)
-#define FX_FROM_FLOAT(f)  ((f) * FX_UNIT)
-#define FX_LERP(a, b, p)  ((a) + ((((b) - (a)) * (p)) >> FX_BITS))
-
-
-
-/* Global Mixer State */
-static struct
-{
-    const char *lasterror;            /* Last error message */
-    mixer_event_handler lock;          /* Event handler for lock/unlock events */
-    struct mixer_source *sources;            /* Linked list of active (playing) sources */
-    int32 buffer[MIXER_BUFFER_SIZE];  /* Internal master buffer */
-    int samplerate;                   /* Master samplerate */
-    int gain;                         /* Master gain (fixed point) */
-} mixer;
-
+// TODO: Move to nerd_math?
+/* Fixed Point Linear Interpolation */
+#define FX_BITS (12)
+#define FX_UNIT (1 << FX_BITS)
+#define FX_MASK (FX_UNIT - 1)
+#define FX_FROM_FLOAT(f) ((f)*FX_UNIT)
+#define FX_LERP(a, b, p) ((a) + ((((b) - (a)) * (p)) >> FX_BITS))
 
 static void mixer__dummy_handler(struct mixer_event *event)
 {
     UNUSED(event);
 }
 
-
-static void mixer__lock(void)
+static void mixer__lock(struct mixer *mixer)
 {
     struct mixer_event event;
     event.type = MIXER_EVENT_LOCK;
-    mixer.lock(&event);
+    mixer->lock(&event);
 }
 
-
-static void mixer__unlock(void)
+static void mixer__unlock(struct mixer *mixer)
 {
     struct mixer_event event;
     event.type = MIXER_EVENT_UNLOCK;
-    mixer.lock(&event);
+    mixer->lock(&event);
 }
 
-
-const char *mixer_get_error(void)
+static const char *mixer__error(struct mixer *mixer, const char *msg)
 {
-    const char *res = mixer.lasterror;
-    mixer.lasterror = NULL;
-    return res;
-}
-
-
-static const char *mixer__error(const char *msg)
-{
-    mixer.lasterror = msg;
+    mixer->lasterror = msg;
     return msg;
 }
 
-
-void mixer_init(int samplerate)
+const char *mixer_get_error(struct mixer *mixer)
 {
-    mixer.samplerate = samplerate;
-    mixer.lock = mixer__dummy_handler;
-    mixer.sources = NULL;
-    mixer.gain = FX_UNIT;
+    const char *res = mixer->lasterror;
+    mixer->lasterror = NULL;
+    return res;
 }
 
-
-void mixer_set_lock(mixer_event_handler lock)
+void mixer_init(struct mixer *mixer, int samplerate)
 {
-    mixer.lock = lock;
+    mixer->lasterror = NULL;
+    mixer->samplerate = samplerate;
+    mixer->lock = mixer__dummy_handler;
+    mixer->sources = NULL;
+    mixer->gain = FX_UNIT;
 }
 
-
-void mixer_set_master_gain(double gain)
+void mixer_set_lock(struct mixer *mixer, mixer_event_handler lock)
 {
-    mixer.gain = FX_FROM_FLOAT(gain);
+    mixer->lock = lock;
 }
 
+void mixer_set_master_gain(struct mixer *mixer, double gain)
+{
+    mixer->gain = FX_FROM_FLOAT(gain);
+}
 
 static void mixer__rewind_source(struct mixer_source *source)
 {
@@ -199,7 +194,6 @@ static void mixer__rewind_source(struct mixer_source *source)
     source->nextfill = 0;
 }
 
-
 static void mixer__fill_source_buffer(struct mixer_source *source, int offset, int length)
 {
     struct mixer_event event;
@@ -210,288 +204,272 @@ static void mixer__fill_source_buffer(struct mixer_source *source, int offset, i
     source->handler(&event);
 }
 
-
-static void mixer__process_source(struct mixer_source *source, int length)
+static void mixer__process_source(struct mixer *mixer,
+                                  struct mixer_source *source,
+                                  int length)
 {
     /* Rewind if flag is set */
     if (source->rewind)
     {
-	mixer__rewind_source(source);
+        mixer__rewind_source(source);
     }
 
     /* Don't process if not playing */
     if (source->state != MIXER_STATE_PLAYING)
     {
-	return;
+        return;
     }
 
     /* Process audio */
-    int32 *destination = mixer.buffer;
+    int32 *destination = mixer->buffer;
     while (length > 0)
     {
-	/* Get current frame */
-	int starting_frame = source->position >> FX_BITS;
+        /* Get current frame */
+        int starting_frame = source->position >> FX_BITS;
 
-	/* Fill buffer if required */
-	if (starting_frame + 3 >= source->nextfill)
-	{
-	    mixer__fill_source_buffer(source, (source->nextfill * 2) & MIXER_BUFFER_MASK, MIXER_BUFFER_SIZE / 2);
-	    source->nextfill += MIXER_BUFFER_SIZE / 4;
-	}
+        /* Fill buffer if required */
+        if (starting_frame + 3 >= source->nextfill)
+        {
+            mixer__fill_source_buffer(source,
+                                      (source->nextfill * 2) & MIXER_BUFFER_MASK,
+                                      MIXER_BUFFER_SIZE / 2);
 
-	/* Handle reaching the end of the playthrough */
-	if (starting_frame >= source->end)
-	{
-	    /* As streams continiously fill the raw buffer in a loop we simply
-	    ** increment the end idx by one length and continue reading from it for
-	    ** another play-through */
-	    source->end = starting_frame + source->length;
-	    /* Set state and stop processing if we're not set to loop */
-	    if (!source->loop)
-	    {
-		source->state = MIXER_STATE_STOPPED;
-		break;
-	    }
-	}
+            source->nextfill += MIXER_BUFFER_SIZE / 4;
+        }
 
-	/* Work out how many frames we should process in the loop */
-	int frames_to_process;
-	frames_to_process = MIN(source->nextfill - 2, source->end) - starting_frame;
-	frames_to_process = (frames_to_process << FX_BITS) / source->rate; /* Compensate for fixed precision rate difference */
-	frames_to_process = MAX(frames_to_process, 1); /* Process at least 1 frame */
-	frames_to_process = MIN(frames_to_process, length / 2); /* Do not process more frames than we have length left */
-	length -= frames_to_process * 2; /* Remove frames from length (We process 2 at a time) */
+        /* Handle reaching the end of the playthrough */
+        if (starting_frame >= source->end)
+        {
+            /* As streams continiously fill the raw buffer in a loop
+             * we simply increment the end idx by one length and continue
+             * reading from it for another play-through */
+            source->end = starting_frame + source->length;
 
-	/* Add audio to master buffer */
-	if (source->rate == FX_UNIT)
-	{
-	    /* Add audio to buffer -- basic */
-	    int current_frame = starting_frame * 2;
-	    for (int i = 0; i < frames_to_process; i++)
-	    {
-		destination[0] += (source->buffer[(current_frame    ) & MIXER_BUFFER_MASK] * source->lgain) >> FX_BITS;
-		destination[1] += (source->buffer[(current_frame + 1) & MIXER_BUFFER_MASK] * source->rgain) >> FX_BITS;
-		current_frame += 2;
-		destination += 2;
-	    }
-	    source->position += frames_to_process * FX_UNIT;
-	}
-	else
-	{
-	    /* Add audio to buffer -- interpolated */
-	    int lerp_frames[2];
-	    for (int i = 0; i < frames_to_process; i++)
-	    {
-		int current_frame = (source->position >> FX_BITS) * 2;
-		int pos = source->position & FX_MASK;
+            /* Set state and stop processing if we're not set to loop */
+            if (!source->loop)
+            {
+                source->state = MIXER_STATE_STOPPED;
+                break;
+            }
+        }
 
-		lerp_frames[0] = source->buffer[(current_frame    ) & MIXER_BUFFER_MASK];
-		lerp_frames[1] = source->buffer[(current_frame + 2) & MIXER_BUFFER_MASK];
-		destination[0] += (FX_LERP(lerp_frames[0], lerp_frames[1], pos) * source->lgain) >> FX_BITS;
-	
-		current_frame++;
+        /* Work out how many frames we should process in the loop */
+        int frames_to_process;
+        frames_to_process = math_min(source->nextfill - 2, source->end) - starting_frame;
 
-		lerp_frames[0] = source->buffer[(current_frame    ) & MIXER_BUFFER_MASK];
-		lerp_frames[1] = source->buffer[(current_frame + 2) & MIXER_BUFFER_MASK];
-		destination[1] += (FX_LERP(lerp_frames[0], lerp_frames[1], pos) * source->rgain) >> FX_BITS;
+        /* Compensate for fixed precision rate difference */
+        frames_to_process = (frames_to_process << FX_BITS) / source->rate;
 
-		source->position += source->rate;
-		destination += 2;
-	    }
-	}
+        /* Process at least 1 frame */
+        frames_to_process = math_max(frames_to_process, 1);
+
+        /* Do not process more frames than we have length left */
+        frames_to_process = math_min(frames_to_process, length / 2);
+
+        /* Remove frames from length (We process 2 at a time) */
+        length -= frames_to_process * 2;
+
+        /* Add audio to master buffer */
+        if (source->rate == FX_UNIT)
+        {
+            /* Add audio to buffer -- basic */
+            int current_frame = starting_frame * 2;
+            for (int i = 0; i < frames_to_process; i++)
+            {
+                destination[0] += (source->buffer[(current_frame)&MIXER_BUFFER_MASK] *
+                                   source->lgain) >>
+                                  FX_BITS;
+
+                destination[1] +=
+                    (source->buffer[(current_frame + 1) & MIXER_BUFFER_MASK] *
+                     source->rgain) >>
+                    FX_BITS;
+                current_frame += 2;
+                destination += 2;
+            }
+            source->position += frames_to_process * FX_UNIT;
+        }
+        else
+        {
+            /* Add audio to buffer -- interpolated */
+            int lerp_frames[2];
+            for (int i = 0; i < frames_to_process; i++)
+            {
+                int current_frame = (source->position >> FX_BITS) * 2;
+                int pos = source->position & FX_MASK;
+
+                lerp_frames[0] = source->buffer[(current_frame)&MIXER_BUFFER_MASK];
+                lerp_frames[1] = source->buffer[(current_frame + 2) & MIXER_BUFFER_MASK];
+                destination[0] += (FX_LERP(lerp_frames[0], lerp_frames[1], pos) * source->lgain) >> FX_BITS;
+
+                current_frame++;
+
+                lerp_frames[0] = source->buffer[(current_frame)&MIXER_BUFFER_MASK];
+                lerp_frames[1] = source->buffer[(current_frame + 2) & MIXER_BUFFER_MASK];
+                destination[1] += (FX_LERP(lerp_frames[0], lerp_frames[1], pos) * source->rgain) >> FX_BITS;
+
+                source->position += source->rate;
+                destination += 2;
+            }
+        }
     }
 }
 
-
-void mixer_process(int16 *destination, int length)
+void mixer_process(struct mixer *mixer, int16 *destination, int length)
 {
     /* Process in chunks of MIXER_BUFFER_SIZE if `length` is larger than MIXER_BUFFER_SIZE */
     while (length > MIXER_BUFFER_SIZE)
     {
-	mixer_process(destination, MIXER_BUFFER_SIZE);
-	destination += MIXER_BUFFER_SIZE;
-	length -= MIXER_BUFFER_SIZE;
+        mixer_process(mixer, destination, MIXER_BUFFER_SIZE);
+        destination += MIXER_BUFFER_SIZE;
+        length -= MIXER_BUFFER_SIZE;
     }
 
     /* Zeroset internal buffer */
-    memset(mixer.buffer, 0, length * sizeof(mixer.buffer[0]));
+    memset(mixer->buffer, 0, length * sizeof(mixer->buffer[0]));
 
     /* Process active sources */
-    mixer__lock();
-    struct mixer_source** source = &mixer.sources;
+    mixer__lock(mixer);
+    struct mixer_source **source = &mixer->sources;
     while (*source)
     {
-	mixer__process_source(*source, length);
-	/* Remove source from list if it is no longer playing */
-	if ((*source)->state != MIXER_STATE_PLAYING)
-	{
-	    (*source)->active = 0;
-	    *source = (*source)->next;
-	}
-	else
-	{
-	    source = &(*source)->next;
-	}
+        mixer__process_source(mixer, *source, length);
+        /* Remove source from list if it is no longer playing */
+        if ((*source)->state != MIXER_STATE_PLAYING)
+        {
+            (*source)->active = 0;
+            *source = (*source)->next;
+        }
+        else
+        {
+            source = &(*source)->next;
+        }
     }
-    mixer__unlock();
+    mixer__unlock(mixer);
 
     /* Copy internal buffer to destination and clip */
     for (int i = 0; i < length; i++)
     {
-	int with_gain = (mixer.buffer[i] * mixer.gain) >> FX_BITS;
-	destination[i] = CLAMP(with_gain, -32768, 32767);
+        int with_gain = (mixer->buffer[i] * mixer->gain) >> FX_BITS;
+        destination[i] = math_clamp(with_gain, -32768, 32767);
     }
 }
 
-
-struct mixer_source *mixer_new_source(const struct mixer_source_info *info)
+struct mixer_source *mixer_new_source(struct mixer *mixer, const struct mixer_source_info *info)
 {
-    struct mixer_source *source = (struct mixer_source *)calloc(1, sizeof(*source));
+    struct mixer_source *source = calloc(1, sizeof(*source));
     if (!source)
     {
-	mixer__error("allocation failed");
-	return NULL;
+        mixer__error(mixer, "allocation failed");
+        return NULL;
     }
+
     source->handler = info->handler;
     source->length = info->length;
     source->samplerate = info->samplerate;
     source->udata = info->udata;
+
     mixer_set_gain(source, 1);
     mixer_set_pan(source, 0);
-    mixer_set_pitch(source, 1);
+    mixer_set_pitch(mixer, source, 1);
     mixer_set_loop(source, 0);
     mixer_stop(source);
+
     return source;
 }
-
 
 static int mixer__check_header(void *data, int size, const char *str, int offset)
 {
     int length = strlen(str);
-    return (size >= offset + length) && !memcmp((char *) data + offset, str, length);
+    return (size >= offset + length) && !memcmp((char *)data + offset, str, length);
 }
 
-
-static struct mixer_source *mixer__new_source_from_mem(void *data, int size, int ownsdata)
+static struct mixer_source *mixer__new_source_from_mem(struct mixer *mixer,
+                                                       void *data,
+                                                       int size,
+                                                       int ownsdata)
 {
     if (mixer__check_header(data, size, "OggS", 0))
     {
-	struct mixer_source_info info;
-	const char *err = mixer__ogg_init(&info, data, size, ownsdata);
-	if (err)
-	{
-	    return NULL;
-	}
-	return mixer_new_source(&info);
+        struct mixer_source_info info;
+        const char *err = mixer__ogg_init(mixer, &info, data, size, ownsdata);
+        if (err)
+        {
+            return NULL;
+        }
+        return mixer_new_source(mixer, &info);
     }
 
-    mixer__error("unknown format or invalid data");
+    mixer__error(mixer, "unknown format or invalid data");
     return NULL;
 }
 
-
-static void *mixer__load_file(const char *filename, int *size)
-{
-    FILE *file = fopen(filename, "rb");
-    if (!file)
-    {
-	return NULL;
-    }
-
-    /* Get size */
-    fseek(file, 0, SEEK_END);
-    *size = ftell(file);
-    rewind(file);
-
-    /* Malloc, read and return data */
-    void *data = malloc(*size);
-    if (!data)
-    {
-	fclose(file);
-	return NULL;
-    }
-    int read_size = fread(data, 1, *size, file);
-    fclose(file);
-    if (read_size != *size)
-    {
-	free(data);
-	return NULL;
-    }
-
-    return data;
-}
-
-
-struct mixer_source *mixer_new_source_from_file(const char *filename)
+struct mixer_source *mixer_new_source_from_file(struct mixer *mixer, const char *filename)
 {
     /* Load file into memory */
-    int size;
-    void *data = mixer__load_file(filename, &size);
+    size_t len;
+    void *data = file_load(filename, &len);
     if (!data)
     {
-	mixer__error("could not load file");
-	return NULL;
+        mixer__error(mixer, "could not load file");
+        return NULL;
     }
 
     /* Try to load and return */
-    struct mixer_source *source = mixer__new_source_from_mem(data, size, 1);
+    struct mixer_source *source = mixer__new_source_from_mem(mixer, data, len, 1);
     if (!source)
     {
-	free(data);
-	return NULL;
+        free(data);
+        return NULL;
     }
 
     return source;
 }
 
-
-struct mixer_source *mixer_new_source_from_mem(void *data, int size)
+struct mixer_source *mixer_new_source_from_mem(struct mixer *mixer, void *data, int size)
 {
-    return mixer__new_source_from_mem(data, size, 0);
+    return mixer__new_source_from_mem(mixer, data, size, 0);
 }
 
-
-void mixer_destroy_source(struct mixer_source *source)
+void mixer_destroy_source(struct mixer *mixer, struct mixer_source *source)
 {
-    mixer__lock();
+    struct mixer_event event;
+
+    mixer__lock(mixer);
     if (source->active)
     {
-	struct mixer_source **current_source = &mixer.sources;
-	while (*current_source)
-	{
-	    if (*current_source == source)
-	    {
-		*current_source = source->next;
-		break;
-	    }
-	}
+        struct mixer_source **current_source = &mixer->sources;
+        while (*current_source)
+        {
+            if (*current_source == source)
+            {
+                *current_source = source->next;
+                break;
+            }
+        }
     }
-    mixer__unlock();
-    struct mixer_event event;
+
+    mixer__unlock(mixer);
     event.type = MIXER_EVENT_DESTROY;
     event.udata = source->udata;
     source->handler(&event);
     free(source);
 }
 
-
 double mixer_get_length(struct mixer_source *source)
 {
-    return source->length / (double) source->samplerate;
+    return source->length / (double)source->samplerate;
 }
-
 
 double mixer_get_position(struct mixer_source *source)
 {
-    return ((source->position >> FX_BITS) % source->length) / (double) source->samplerate;
+    return ((source->position >> FX_BITS) % source->length) / (double)source->samplerate;
 }
-
 
 int mixer_get_state(struct mixer_source *source)
 {
     return source->state;
 }
-
 
 static void mixer__recalculate_source_gain(struct mixer_source *source)
 {
@@ -502,53 +480,46 @@ static void mixer__recalculate_source_gain(struct mixer_source *source)
     source->rgain = FX_FROM_FLOAT(right);
 }
 
-
 void mixer_set_gain(struct mixer_source *source, double gain)
 {
     source->gain = gain;
     mixer__recalculate_source_gain(source);
 }
 
-
 void mixer_set_pan(struct mixer_source *source, double pan)
 {
-    source->pan = CLAMP(pan, -1.0, 1.0);
+    source->pan = math_clamp(pan, -1.0, 1.0);
     mixer__recalculate_source_gain(source);
 }
 
-
-void mixer_set_pitch(struct mixer_source *source, double pitch)
+void mixer_set_pitch(struct mixer *mixer, struct mixer_source *source, double pitch)
 {
-    double rate = pitch > 0.0 ? source->samplerate / (double) mixer.samplerate * pitch : 0.001;
+    double rate = pitch > 0.0 ? source->samplerate / (double)mixer->samplerate * pitch : 0.001;
     source->rate = FX_FROM_FLOAT(rate);
 }
-
 
 void mixer_set_loop(struct mixer_source *source, int loop)
 {
     source->loop = loop;
 }
 
-
-void mixer_play(struct mixer_source *source)
+void mixer_play(struct mixer *mixer, struct mixer_source *source)
 {
-    mixer__lock();
+    mixer__lock(mixer);
     source->state = MIXER_STATE_PLAYING;
     if (!source->active)
     {
-	source->active = 1;
-	source->next = mixer.sources;
-	mixer.sources = source;
+        source->active = 1;
+        source->next = mixer->sources;
+        mixer->sources = source;
     }
-    mixer__unlock();
+    mixer__unlock(mixer);
 }
-
 
 void mixer_pause(struct mixer_source *source)
 {
     source->state = MIXER_STATE_PAUSED;
 }
-
 
 void mixer_stop(struct mixer_source *source)
 {
@@ -556,73 +527,76 @@ void mixer_stop(struct mixer_source *source)
     source->rewind = 1;
 }
 
-
-typedef struct
+struct ogg_stream
 {
     stb_vorbis *ogg;
     void *data;
-} ogg_stream;
-
+};
 
 static void mixer__ogg_handler(struct mixer_event *event)
 {
-    ogg_stream *stream = (ogg_stream *)event->udata;
+    struct ogg_stream *stream = (struct ogg_stream *)event->udata;
     switch (event->type)
     {
-	case MIXER_EVENT_DESTROY:
-	{
-	    stb_vorbis_close(stream->ogg);
-	    free(stream->data);
-	    free(stream);
-	} break;
+        case MIXER_EVENT_DESTROY:
+        {
+            stb_vorbis_close(stream->ogg);
+            free(stream->data);
+            free(stream);
+            break;
+        }
+        case MIXER_EVENT_SAMPLES:
+        {
+            int len = event->length;
+            int16 *buf = event->buffer;
+            int sample_count;
+        fill:
+            sample_count = stb_vorbis_get_samples_short_interleaved(stream->ogg, 2, buf, len);
+            sample_count *= 2;
 
-	case MIXER_EVENT_SAMPLES:
-	{
-	    int len = event->length;
-	    int16 *buf = event->buffer;
-	    int sample_count;
-	fill:
-	    sample_count = stb_vorbis_get_samples_short_interleaved(stream->ogg, 2, buf, len);
-	    sample_count *= 2;
-	    /* rewind and fill remaining buffer if we reached the end of the ogg
-	    ** before filling it */
-	    if (len != sample_count)
-	    {
-		stb_vorbis_seek_start(stream->ogg);
-		buf += sample_count;
-		len -= sample_count;
-		goto fill;
-	    }
-	} break;
-
-	case MIXER_EVENT_REWIND:
-	{
-	    stb_vorbis_seek_start(stream->ogg);
-	} break;
+            /* rewind and fill remaining buffer if we reached the end of the
+             * ogg  before filling it */
+            if (len != sample_count)
+            {
+                stb_vorbis_seek_start(stream->ogg);
+                buf += sample_count;
+                len -= sample_count;
+                goto fill;
+            }
+            break;
+        }
+        case MIXER_EVENT_REWIND:
+        {
+            stb_vorbis_seek_start(stream->ogg);
+            break;
+        }
     }
 }
 
-
-static const char *mixer__ogg_init(struct mixer_source_info *info, void *data, int length, int ownsdata)
+static const char *mixer__ogg_init(struct mixer *mixer,
+                                   struct mixer_source_info *info,
+                                   void *data,
+                                   int length,
+                                   int ownsdata)
 {
     int err;
     stb_vorbis *ogg = stb_vorbis_open_memory((const unsigned char *)data, length, &err, NULL);
     if (!ogg)
     {
-	return mixer__error("invalid ogg data");
+        return mixer__error(mixer, "invalid ogg data");
     }
 
-    ogg_stream *stream = (ogg_stream *)calloc(1, sizeof(*stream));
+    struct ogg_stream *stream = (struct ogg_stream *)calloc(1, sizeof(*stream));
     if (!stream)
     {
-	stb_vorbis_close(ogg);
-	return mixer__error("allocation failed");
+        stb_vorbis_close(ogg);
+        return mixer__error(mixer, "allocation failed");
     }
 
     stream->ogg = ogg;
     if (ownsdata)
     {
-	stream->data = data;
+        stream->data = data;
     }
 
     stb_vorbis_info ogginfo = stb_vorbis_get_info(ogg);

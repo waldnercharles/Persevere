@@ -1,10 +1,12 @@
 -std=c99
+-fdelayed-template-parsing
 -Wall
 -Wextra
 -Wfloat-equal
 -Wundef
 -Wshadow
 -Wpointer-arith
+-code-completion-macros
 -isystem
 c:/msys64/mingw32/include
 -isystem

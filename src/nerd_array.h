@@ -2,6 +2,7 @@
 
 #include "nerd_memory.h"
 
+// clang-format off
 #define array_free(a)           ((a) ? free(array__raw(a)),0 : 0)
 #define array_push(a,v)         (array_push_sz(a,v,sizeof(*(a))))
 #define array_push_sz(a,v,sz)   (array__grow_if_required_sz(a,1,sz), (a)[array__len(a)++] = (v))
@@ -21,20 +22,27 @@
 #define array__grow_if_required_sz(a,n,sz)  (array__grow_required(a,n) ? array__grow_sz(a,n,sz) : 0)
 
 #define array_for_each(a,v)  for((v)=(a); (v)<(a)+array__len(a); ++(v))
-
+// clang-format on
 
 static void *array__grow_internal(void *arr, int inc, size_t item_size)
 {
     int double_capacity = arr ? array__cap(arr) * 2 : 0;
     int min_capacity = array_count(arr) + inc;
-    int new_capacity = double_capacity > min_capacity ? double_capacity : min_capacity;
-    int *ptr = (int *)realloc(arr ? array__raw(arr) : 0, item_size * new_capacity + sizeof(int) * 2);
+    int new_capacity = double_capacity > min_capacity ? double_capacity
+                                                      : min_capacity;
+
+    int *ptr = realloc(arr ? array__raw(arr) : 0, item_size * new_capacity + sizeof(int) * 2);
+
     if (ptr == NULL)
-	return NULL;
-    
+    {
+        return NULL;
+    }
+
     if (!arr)
-	ptr[0] = 0;
-    
+    {
+        ptr[0] = 0;
+    }
+
     ptr[1] = new_capacity;
     return ptr + 2;
 }

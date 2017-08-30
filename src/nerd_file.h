@@ -1,25 +1,12 @@
 #pragma once
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <time.h>
-
+#include "nerd.h"
 #include "nerd_math.h"
 #include "nerd_memory.h"
 
-#if !defined(_WIN32) && !defined(_WIN64)
-#include <unistd.h>
-#endif
-
-#if defined(_WIN32) || defined(_WIN64)
-#define stat _stat
-#endif
-
 #define file_t FILE
 
-static int file_compare_internal(file_t *f1, file_t *f2);
+static int file__compare(file_t *f1, file_t *f2);
 
 size_t file_length(file_t *f)
 {
@@ -32,53 +19,56 @@ size_t file_length(file_t *f)
     return len;
 }
 
-
-int file_compare(char *fname1, char *fname2)
+int file_compare(char *filename1, char *filename2)
 {
-    file_t *f1 = fopen(fname1, "rb");
-    file_t *f2 = fopen(fname2, "rb");
+    file_t *f1 = fopen(filename1, "rb");
+    file_t *f2 = fopen(filename2, "rb");
 
     if (f1 == NULL || f2 == NULL)
     {
-	if (f1 != NULL)
-	{
-	    fclose(f1);
-	    return 1;
-	}
-	if (f2 != NULL)
-	{
-	    fclose(f2);
-	    return -1;
-	}
-	return 0;
+        if (f1 != NULL)
+        {
+            fclose(f1);
+            return 1;
+        }
+        if (f2 != NULL)
+        {
+            fclose(f2);
+            return -1;
+        }
+        return 0;
     }
 
-    return file_compare_internal(f1, f2);
+    return file__compare(f1, f2);
 }
 
-
-bool file_equals(char *fname1, char *fname2)
+bool file_equals(char *filename1, char *filename2)
 {
-    file_t *f1 = fopen(fname1, "rb");
-    file_t *f2 = fopen(fname2, "rb");
+    file_t *f1 = fopen(filename1, "rb");
+    file_t *f2 = fopen(filename2, "rb");
 
     if (f1 == NULL || f2 == NULL)
     {
-	if (f1 != NULL) fclose(f1);
-	if (f2 != NULL) fclose(f2);
-	return f1 == f2;
+        if (f1 != NULL)
+        {
+            fclose(f1);
+        }
+        if (f2 != NULL)
+        {
+            fclose(f2);
+        }
+        return f1 == f2;
     }
 
     if (file_length(f1) != file_length(f2))
     {
-	fclose(f1);
-	fclose(f2);
-	return 0;
+        fclose(f1);
+        fclose(f2);
+        return 0;
     }
 
-    return !file_compare_internal(f1, f2);
+    return !file__compare(f1, f2);
 }
-
 
 void file_copy(char *from, char *to)
 {
@@ -90,73 +80,113 @@ void file_copy(char *from, char *to)
 
     if (f1 == NULL || f2 == NULL)
     {
-	if (f1 != NULL) fclose(f1);
-	if (f2 != NULL) fclose(f2);
-	return;
+        if (f1 != NULL)
+        {
+            fclose(f1);
+        }
+        if (f2 != NULL)
+        {
+            fclose(f2);
+        }
+        return;
     }
 
     while ((nread = fread(buf, 1, sizeof(buf), f1)))
     {
-	fwrite(buf, 1, sizeof(buf), f2);
+        fwrite(buf, 1, sizeof(buf), f2);
     }
     fclose(f1);
     fclose(f2);
 }
 
-
-bool file_exists(char *fname)
+bool file_exists(char *filename)
 {
     struct stat buf;
-    return stat(fname, &buf) == 0;
+    return stat(filename, &buf) == 0;
 }
 
-
-char *file_cstr(char *fname, size_t *length)
+static void *file__load(const char *filename, size_t *length, size_t additional_length)
 {
-    file_t *f = fopen(fname, "rb");
-    char *buf;
+    file_t *f = fopen(filename, "rb");
     size_t len, read_len;
+    void *buf;
 
-    if (f == NULL) return NULL;
+    if (f == NULL)
+    {
+        return NULL;
+    }
 
     len = file_length(f);
-    buf = (char *)malloc(len+1);
+    buf = malloc(len + additional_length);
+    if (buf == NULL)
+    {
+        fclose(f);
+        return NULL;
+    }
+
     read_len = fread(buf, 1, len, f);
+    fclose(f);
 
     if (read_len == len)
     {
-	if (length) *length = len;
-	buf[len] = 0;
+        if (length != NULL)
+        {
+            *length = len;
+        }
     }
     else
     {
-	free(buf);
-	buf = NULL;
+        free(buf);
+        return NULL;
     }
 
-    fclose(f);
     return buf;
 }
 
+char *file_cstr(char *filename, size_t *length)
+{
+    char *buf;
+    size_t len;
+    if (length)
+    {
+        buf = file__load(filename, length, 1);
+        buf[*length] = 0;
+    }
+    else
+    {
+        buf = file__load(filename, &len, 1);
+        buf[len] = 0;
+    }
 
-static int file_compare_internal(file_t *f1, file_t *f2)
+    return buf;
+}
+
+void *file_load(const char *filename, size_t *length) { return file__load(filename, length, 0); }
+
+static int file__compare(file_t *f1, file_t *f2)
 {
     char buf1[2048], buf2[2048];
+    size_t size1, size2;
     int cmp = 0;
     while (1)
     {
-	size_t size1 = fread(buf1, 1, sizeof(buf1), f1);
-	size_t size2 = fread(buf2, 1, sizeof(buf2), f2);
-	cmp = memcmp(buf1, buf2, math_min(size1, size2));
+        size1 = fread(buf1, 1, sizeof(buf1), f1);
+        size2 = fread(buf2, 1, sizeof(buf2), f2);
+        cmp = memcmp(buf1, buf2, math_min(size1, size2));
 
-	if (cmp != 0) break;
-	if (size1 != size2)
-	{
-	    cmp = size1 < size2 ? -1 : 1;
-	    break;
-	}
-	if (size1 == 0) break;
+        if (cmp != 0)
+        {
+            break;
+        }
+        if (size1 != size2)
+        {
+            cmp = size1 < size2 ? -1 : 1;
+            break;
+        }
+        if (size1 == 0)
+        {
+            break;
+        }
     }
-
     return cmp;
 }

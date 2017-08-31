@@ -1,14 +1,4 @@
-#pragma once
-
-#include "nerd.h"
-#include "nerd_memory.h"
-#include "nerd_typedefs.h"
-
-struct bitset
-{
-    uint8 *bytes;
-    uint capacity;
-};
+#include "nerd_bitset.h"
 
 uint bitset_mask(uint b) { return (1 << (b & 7)); }
 uint bitset_slot(uint b) { return b >> 3; }
@@ -16,10 +6,6 @@ uint bitset_nslots(uint b) { return (b + 7) >> 3; }
 void bitset_set(uint8 *bytes, uint b) { bytes[bitset_slot(b)] |= bitset_mask(b); }
 void bitset_clear(uint8 *bytes, uint b) { bytes[bitset_slot(b)] &= ~bitset_mask(b); }
 bool bitset_test(uint8 *bytes, uint b) { return bytes[bitset_slot(b)] & bitset_mask(b); }
-
-#define bitset_for_each(b, i)                 \
-    for ((i) = 0; (i) < (b)->capacity; (i)++) \
-        if (bitset_test((b)->bytes, (i)))
 
 void bitset_insert(struct bitset *bitset, uint value)
 {

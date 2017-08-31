@@ -1,26 +1,4 @@
-#pragma once
-
-#include "nerd.h"
-#include "nerd_memory.h"
-#include "nerd_typedefs.h"
-
-struct dict_key_value
-{
-    char *key;
-    void *value;
-};
-
-struct dict_bucket
-{
-    uint count;
-    struct dict_key_value *pairs;
-};
-
-struct dict
-{
-    uint count;
-    struct dict_bucket *buckets;
-};
+#include "nerd_dict.h"
 
 static uint dict__hash(char *str)
 {

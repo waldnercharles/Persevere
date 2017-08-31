@@ -3,12 +3,14 @@
 //#include "stb_image.h"
 
 #include "game_core.h"
-
 #include "nerd.h"
-#include "nerd_dynlib.h"
-#include "nerd_math.h"
-#include "nerd_memory.h"
-#include "nerd_mixer.h"
+
+#include "nerd_dynlib.c"
+#include "nerd_file.c"
+#include "nerd_math.c"
+#include "nerd_memory.c"
+#include "nerd_mixer.c"
+#include "nerd_string.c"
 
 static struct game game;
 

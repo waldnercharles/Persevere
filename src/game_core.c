@@ -1,5 +1,11 @@
 #include "game_core.h"
 
+#include "nerd_bitset.c"
+#include "nerd_echo.c"
+#include "nerd_math.c"
+#include "nerd_memory.c"
+#include "nerd_sparse_set.c"
+
 struct position
 {
     float x, y;

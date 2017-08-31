@@ -1,12 +1,70 @@
-#pragma once
+#include "nerd_file.h"
 
-#include "nerd.h"
-#include "nerd_math.h"
-#include "nerd_memory.h"
+static void *file__load(const char *filename, size_t *length, size_t additional_length)
+{
+    file_t *f = fopen(filename, "rb");
+    size_t len, read_len;
+    void *buf;
 
-#define file_t FILE
+    if (f == NULL)
+    {
+        return NULL;
+    }
 
-static int file__compare(file_t *f1, file_t *f2);
+    len = file_length(f);
+    buf = malloc(len + additional_length);
+    if (buf == NULL)
+    {
+        fclose(f);
+        return NULL;
+    }
+
+    read_len = fread(buf, 1, len, f);
+    fclose(f);
+
+    if (read_len == len)
+    {
+        if (length != NULL)
+        {
+            *length = len;
+        }
+    }
+    else
+    {
+        free(buf);
+        return NULL;
+    }
+
+    return buf;
+}
+
+static int file__compare(file_t *f1, file_t *f2)
+{
+    char buf1[2048], buf2[2048];
+    size_t size1, size2;
+    int cmp = 0;
+    while (1)
+    {
+        size1 = fread(buf1, 1, sizeof(buf1), f1);
+        size2 = fread(buf2, 1, sizeof(buf2), f2);
+        cmp = memcmp(buf1, buf2, math_min(size1, size2));
+
+        if (cmp != 0)
+        {
+            break;
+        }
+        if (size1 != size2)
+        {
+            cmp = size1 < size2 ? -1 : 1;
+            break;
+        }
+        if (size1 == 0)
+        {
+            break;
+        }
+    }
+    return cmp;
+}
 
 size_t file_length(file_t *f)
 {
@@ -105,44 +163,6 @@ bool file_exists(char *filename)
     return stat(filename, &buf) == 0;
 }
 
-static void *file__load(const char *filename, size_t *length, size_t additional_length)
-{
-    file_t *f = fopen(filename, "rb");
-    size_t len, read_len;
-    void *buf;
-
-    if (f == NULL)
-    {
-        return NULL;
-    }
-
-    len = file_length(f);
-    buf = malloc(len + additional_length);
-    if (buf == NULL)
-    {
-        fclose(f);
-        return NULL;
-    }
-
-    read_len = fread(buf, 1, len, f);
-    fclose(f);
-
-    if (read_len == len)
-    {
-        if (length != NULL)
-        {
-            *length = len;
-        }
-    }
-    else
-    {
-        free(buf);
-        return NULL;
-    }
-
-    return buf;
-}
-
 char *file_cstr(char *filename, size_t *length)
 {
     char *buf;
@@ -161,32 +181,7 @@ char *file_cstr(char *filename, size_t *length)
     return buf;
 }
 
-void *file_load(const char *filename, size_t *length) { return file__load(filename, length, 0); }
-
-static int file__compare(file_t *f1, file_t *f2)
+void *file_load(const char *filename, size_t *length)
 {
-    char buf1[2048], buf2[2048];
-    size_t size1, size2;
-    int cmp = 0;
-    while (1)
-    {
-        size1 = fread(buf1, 1, sizeof(buf1), f1);
-        size2 = fread(buf2, 1, sizeof(buf2), f2);
-        cmp = memcmp(buf1, buf2, math_min(size1, size2));
-
-        if (cmp != 0)
-        {
-            break;
-        }
-        if (size1 != size2)
-        {
-            cmp = size1 < size2 ? -1 : 1;
-            break;
-        }
-        if (size1 == 0)
-        {
-            break;
-        }
-    }
-    return cmp;
+    return file__load(filename, length, 0);
 }

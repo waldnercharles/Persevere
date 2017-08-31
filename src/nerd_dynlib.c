@@ -1,17 +1,4 @@
-#include "nerd.h"
-#include "nerd_file.h"
-#include "nerd_string.h"
-
-typedef void game_init_func(void *game_state);
-typedef void game_loop_func(void *game_state, float dt);
-
-struct game_dll
-{
-    void *library;
-    time_t last_write_time;
-    game_init_func *game_init;
-    game_loop_func *game_loop;
-};
+#include "nerd_dynlib.h"
 
 static time_t get_last_write_time(char *filename)
 {

@@ -77,7 +77,7 @@ size_t file_length(file_t *f)
     return len;
 }
 
-int file_compare(char *filename1, char *filename2)
+int file_compare(const char *filename1, const char *filename2)
 {
     file_t *f1 = fopen(filename1, "rb");
     file_t *f2 = fopen(filename2, "rb");
@@ -100,7 +100,7 @@ int file_compare(char *filename1, char *filename2)
     return file__compare(f1, f2);
 }
 
-bool file_equals(char *filename1, char *filename2)
+bool file_equals(const char *filename1, const char *filename2)
 {
     file_t *f1 = fopen(filename1, "rb");
     file_t *f2 = fopen(filename2, "rb");
@@ -128,7 +128,7 @@ bool file_equals(char *filename1, char *filename2)
     return !file__compare(f1, f2);
 }
 
-void file_copy(char *from, char *to)
+void file_copy(const char *from, const char *to)
 {
     char buf[2048];
     size_t nread;
@@ -157,7 +157,7 @@ void file_copy(char *from, char *to)
     fclose(f2);
 }
 
-bool file_exists(char *filename)
+bool file_exists(const char *filename)
 {
     struct stat buf;
     return stat(filename, &buf) == 0;

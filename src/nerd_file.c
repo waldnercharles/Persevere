@@ -163,7 +163,7 @@ bool file_exists(char *filename)
     return stat(filename, &buf) == 0;
 }
 
-char *file_cstr(char *filename, size_t *length)
+char *file_load_cstr(const char *filename, size_t *length)
 {
     char *buf;
     size_t len;

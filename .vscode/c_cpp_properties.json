@@ -41,10 +41,10 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceRoot}/src/*",
-                "${workspaceRoot}/include/*",
+                "${workspaceRoot}/src",
+                "${workspaceRoot}/include",
+                "C:/msys64/mingw32/include",
                 "C:/msys64/mingw32/lib/gcc/i686-w64-mingw32/7.1.0/include",
-                "C:/msys64/mingw32/include/*",
                 "C:/msys64/mingw32/lib/gcc/i686-w64-mingw32/7.1.0/include-fixed"
             ],
             "defines": [
@@ -56,12 +56,11 @@
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
-                    "${workspaceRoot}/src/*",
-                    "${workspaceRoot}/include/*",
+                    "${workspaceRoot}/src",
+                    "${workspaceRoot}/include",
+                    "C:/msys64/mingw32/include/*",
                     "C:/msys64/mingw32/lib/gcc/i686-w64-mingw32/7.1.0/include",
-                    "C:/msys64/mingw32/lib/gcc/i686-w64-mingw32/7.1.0/include-fixed",
-                    "C:/msys64/mingw32/include/",
-                    "C:/msys64/mingw32/include/*"
+                    "C:/msys64/mingw32/lib/gcc/i686-w64-mingw32/7.1.0/include-fixed"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""

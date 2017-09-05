@@ -10,6 +10,7 @@
 #include "nerd_math.c"
 #include "nerd_memory.c"
 #include "nerd_mixer.c"
+#include "nerd_shader.c"
 #include "nerd_string.c"
 
 static struct game game;
@@ -227,26 +228,7 @@ int main()
 
     SDL_GL_SetSwapInterval(1);
 
-    uint shader_program = glCreateProgram();
-
-    uint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    const char *vertex_shader_src = file_cstr("vertex.glsl", NULL);
-
-    glShaderSource(vertex_shader, 1, &vertex_shader_src, NULL);
-    glCompileShader(vertex_shader);
-    glAttachShader(shader_program, vertex_shader);
-
-    uint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    const char *fragment_shader_src = file_cstr("fragment.glsl", NULL);
-
-    glShaderSource(fragment_shader, 1, &fragment_shader_src, NULL);
-    glCompileShader(fragment_shader);
-    glAttachShader(shader_program, fragment_shader);
-
-    glLinkProgram(shader_program);
-
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
+    uint shader_program = shader_program_load("vertex.glsl", "fragment.glsl");
 
     float vertices[] = {
         // position          // colors

@@ -16,7 +16,6 @@
 #define stat _stat
 #endif
 
-/* TODO: Remove */
 #include <GL/glew.h>
 
 #include <SDL2/SDL.h>

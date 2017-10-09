@@ -9,9 +9,9 @@
 
 struct game_controller
 {
-    SDL_GameController *controller;
-    SDL_Haptic *haptic;
-    SDL_JoystickID joystick_id;
+    void *controller;
+    void *haptic;
+    int joystick_id;
     int is_connected;
 };
 
@@ -20,12 +20,12 @@ struct game
     struct echo *echo;
     struct mixer *mixer;
 
-    SDL_Surface *pixel_buffer;
-    SDL_AudioDeviceID audio_device;
     struct game_controller controllers[MAX_CONTROLLERS];
 
-    int x_offset;
-    int y_offset;
+    uint audio_device;
+    uint shader;
+
+    uint VAO;
 };
 
 void game_init(struct game *game);

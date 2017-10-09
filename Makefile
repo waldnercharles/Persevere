@@ -1,5 +1,5 @@
 CC          = gcc
-CFLAGS      = -g -Wall -Wextra -Wfloat-equal -Wundef -Wshadow -Wpointer-arith -std=c99
+CFLAGS      = -g -Wall -Wextra -Wfloat-equal -Wundef -Wshadow -Wpointer-arith -std=c99 -Werror -Wno-missing-braces
 
 ROOT        = c:/msys64/mingw32
 PRJ         = persevere
@@ -16,7 +16,7 @@ all: game platform resources
 
 game: $(SRC)/game_core.c
 	@echo "WAITING FOR COMPILE..." > $(PRJ)-core.lock
-	@$(CC) $(CFLAGS) $(SYS_INCLUDE) -shared $(SRC)/game_core.c -o $(BIN)/$(PRJ)-core.dll -lSDL2
+	@$(CC) $(CFLAGS) $(SYS_INCLUDE) -shared $(SRC)/game_core.c -o $(BIN)/$(PRJ)-core.dll -lSDL2 -lopengl32 -lglew32
 	@$(RM) $(PRJ)-core.lock
 
 platform: $(SRC)/platform.c

@@ -1,0 +1,37 @@
+{
+    "clang.cflags": [
+        "-Wall",
+        "-Wextra",
+        "-Wfloat-equal",
+        "-Wundef",
+        "-Wshadow",
+        "-Wpointer-arith",
+        "-Wno-missing-braces",
+        "-std=c99",
+        "-I${workspaceRoot}/include",
+        "-isystem",
+        "c:/msys64/mingw32/include"
+    ],
+    "clang.cxxflags": [
+        "-Wall",
+        "-Wextra",
+        "-Wfloat-equal",
+        "-Wundef",
+        "-Wshadow",
+        "-Wpointer-arith",
+        "-std=c++98",
+        "-I${workspaceRoot}/include",
+        "-isystem",
+        "c:/msys64/mingw32/include"
+    ],
+    "emeraldwalk.runonsave": {
+        "autoClearConsole": true,
+        "commands": [
+            {
+                "match": ".*",
+                "isAsync": false,
+                "cmd": "cd ${workspaceRoot} && make"
+            }
+        ]
+    }
+}

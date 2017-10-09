@@ -1,9 +1,10 @@
 #include "game_core.h"
 
+#include "nerd.h"
 #include "nerd_bitset.c"
 #include "nerd_echo.c"
 #include "nerd_math.c"
-#include "nerd_memory.c"
+#include "nerd_memory.h"
 #include "nerd_sparse_set.c"
 
 struct position
@@ -18,7 +19,8 @@ struct velocity
 };
 static uint velocity_component;
 
-static void movement_system_process(struct echo *echo, uint entity, float dt)
+static void
+movement_system_process(struct echo *echo, uint entity, float dt)
 {
     struct position *pos;
     struct velocity *vel;
@@ -32,18 +34,32 @@ static void movement_system_process(struct echo *echo, uint entity, float dt)
     printf("%i moved to (%f, %f)\n", entity, pos->x, pos->y);
 }
 
-void game_init(struct game *game)
+void
+game_init(struct game *game)
 {
     game->echo = malloc(sizeof(struct echo));
     memset(game->echo, 0, sizeof(struct echo));
 
-    echo_component_create(game->echo, "position", sizeof(struct position), &position_component);
-    echo_component_create(game->echo, "velocity", sizeof(struct velocity), &velocity_component);
+    echo_component_create(game->echo,
+                          "position",
+                          sizeof(struct position),
+                          &position_component);
+    echo_component_create(game->echo,
+                          "velocity",
+                          sizeof(struct velocity),
+                          &velocity_component);
 
     uint movement_system;
-    echo_system_create(game->echo, "movement", movement_system_process, &movement_system);
-    echo_system_watch_component(game->echo, movement_system, position_component);
-    echo_system_watch_component(game->echo, movement_system, velocity_component);
+    echo_system_create(game->echo,
+                       "movement",
+                       movement_system_process,
+                       &movement_system);
+    echo_system_watch_component(game->echo,
+                                movement_system,
+                                position_component);
+    echo_system_watch_component(game->echo,
+                                movement_system,
+                                velocity_component);
 
     echo_init(game->echo);
 
@@ -68,7 +84,32 @@ void game_init(struct game *game)
     echo_entity_set_state(game->echo, e2, ECHO_ENTITY_ADDED);
 }
 
-void game_loop(struct game *game, float dt)
+void
+game_loop(struct game *game, float dt)
 {
+    (void)dt;
+
+    uint shader_program = game->shader;
+
+    union mat4 model, view, projection;
+    model = mat4_rotate(vec3(1.0f, 0.0f, 0.0f), math_radians(-65.0f));
+    model = mat4_mul(model,
+                     mat4_rotate(vec3(0.0f, 0.0f, 1.0f), math_radians(15.0f)));
+    view = mat4_translate(vec3(0.0f, 0.0f, -3.0f));
+    projection = mat4_perspective(math_radians(45.0f), 1.0f, 0.1f, 100.0f);
+
+    uint model_loc = glGetUniformLocation(shader_program, "model");
+    uint view_loc = glGetUniformLocation(shader_program, "view");
+    uint proj_loc = glGetUniformLocation(shader_program, "projection");
+
+    glUniformMatrix4fv(model_loc, 1, GL_FALSE, &model.m[0][0]);
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view.m[0][0]);
+    glUniformMatrix4fv(proj_loc, 1, GL_FALSE, &projection.m[0][0]);
+
+    glUseProgram(shader_program);
+
+    glBindVertexArray(game->VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
     // echo_process(game_state->echo, dt);
 }

@@ -24,14 +24,16 @@
 #define array_for_each(a,v)  for((v)=(a); (v)<(a)+array__len(a); ++(v))
 // clang-format on
 
-static void *array__grow_internal(void *arr, int inc, size_t item_size)
+static void *
+array__grow_internal(void *arr, int inc, size_t item_size)
 {
-    int double_capacity = arr ? array__cap(arr) * 2 : 0;
-    int min_capacity = array_count(arr) + inc;
-    int new_capacity = double_capacity > min_capacity ? double_capacity
-                                                      : min_capacity;
+    int double_cap = arr ? array__cap(arr) * 2 : 0;
+    int min_cap = array_count(arr) + inc;
+    int new_cap = double_cap > min_cap ? double_cap : min_cap;
 
-    int *ptr = realloc(arr ? array__raw(arr) : 0, item_size * new_capacity + sizeof(int) * 2);
+    int new_size = item_size * new_cap + sizeof(int) * 2;
+
+    int *ptr = realloc(arr ? array__raw(arr) : 0, new_size);
 
     if (ptr == NULL)
     {
@@ -43,6 +45,6 @@ static void *array__grow_internal(void *arr, int inc, size_t item_size)
         ptr[0] = 0;
     }
 
-    ptr[1] = new_capacity;
+    ptr[1] = new_cap;
     return ptr + 2;
 }

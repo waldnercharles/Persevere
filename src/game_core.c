@@ -92,9 +92,15 @@ game_loop(struct game *game, float dt)
     uint shader_program = game->shader;
 
     union mat4 model, view, projection;
-    model = mat4_rotate(vec3(1.0f, 0.0f, 0.0f), math_radians(-65.0f));
+    model = mat4(1.0f);
+
+    model = mat4_mul(model, mat4_translate(vec3(0.0f, 0.0f, 0.0f)));
+
     model = mat4_mul(model,
-                     mat4_rotate(vec3(0.0f, 0.0f, 1.0f), math_radians(15.0f)));
+                     mat4_rotate(vec3(1.0f, 0.0f, 0.0f), math_radians(-65.0f)));
+
+    model = mat4_mul(model,
+                     mat4_rotate(vec3(0.0f, 0.0f, 1.0f), math_radians(30.0f)));
     view = mat4_translate(vec3(0.0f, 0.0f, -3.0f));
     projection = mat4_perspective(math_radians(45.0f), 1.0f, 0.1f, 100.0f);
 
@@ -109,7 +115,7 @@ game_loop(struct game *game, float dt)
     glUseProgram(shader_program);
 
     glBindVertexArray(game->VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     // echo_process(game_state->echo, dt);
 }

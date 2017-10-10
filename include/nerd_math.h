@@ -152,5 +152,11 @@ union mat4 mat4_translate(union vec3 v);
 union mat4 mat4_scale(union vec3 v);
 union mat4 mat4_rotate(union vec3 axis, float angle_radians);
 
-union mat4 mat4_ortho(float left, float right, float bottom, float top, float near, float far);
+union mat4 mat4_ortho(float left,
+                      float right,
+                      float bottom,
+                      float top,
+                      float near,
+                      float far);
+
 union mat4 mat4_perspective(float fovy, float aspect, float near, float far);

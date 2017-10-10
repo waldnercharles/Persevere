@@ -19,6 +19,6 @@ bool bitset_test(uint8 *bytes, uint b);
 void bitset_insert(struct bitset *bitset, uint value);
 void bitset_delete(struct bitset *bitset, uint value);
 
-#define bitset_for_each(b, i)                 \
-    for ((i) = 0; (i) < (b)->capacity; (i)++) \
+#define bitset_for_each(b, i)                                                  \
+    for ((i) = 0; (i) < (b)->capacity; (i)++)                                  \
         if (bitset_test((b)->bytes, (i)))

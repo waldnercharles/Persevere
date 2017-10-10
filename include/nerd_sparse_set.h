@@ -12,7 +12,7 @@ struct sparse_set
     uint capacity;
 };
 
-#define sparse_set_for_each(s, v) \
+#define sparse_set_for_each(s, v)                                              \
     for ((v) = (s)->dense; (v) < (s)->dense + (s)->population; ++(v))
 
 void sparse_set_insert(struct sparse_set *s, uint value);

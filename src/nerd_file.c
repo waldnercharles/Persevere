@@ -1,10 +1,11 @@
 #include "nerd_file.h"
 
-static void *file__load(const char *filename, size_t *length, size_t additional_length)
+static void *
+file__load(const char *filename, size_t *length, size_t additional_length)
 {
-    file_t *f = fopen(filename, "rb");
-    size_t len, read_len;
     void *buf;
+    size_t len, read_len;
+    file_t *f = fopen(filename, "rb");
 
     if (f == NULL)
     {
@@ -38,7 +39,8 @@ static void *file__load(const char *filename, size_t *length, size_t additional_
     return buf;
 }
 
-static int file__compare(file_t *f1, file_t *f2)
+static int
+file__compare(file_t *f1, file_t *f2)
 {
     char buf1[2048], buf2[2048];
     size_t size1, size2;
@@ -66,18 +68,22 @@ static int file__compare(file_t *f1, file_t *f2)
     return cmp;
 }
 
-size_t file_length(file_t *f)
+size_t
+file_length(file_t *f)
 {
-    size_t pos = ftell(f);
+    size_t pos, len;
+
+    pos = ftell(f);
     fseek(f, 0, SEEK_END);
 
-    size_t len = ftell(f);
+    len = ftell(f);
     fseek(f, pos, SEEK_SET);
 
     return len;
 }
 
-int file_compare(const char *filename1, const char *filename2)
+int
+file_compare(const char *filename1, const char *filename2)
 {
     file_t *f1 = fopen(filename1, "rb");
     file_t *f2 = fopen(filename2, "rb");
@@ -100,7 +106,8 @@ int file_compare(const char *filename1, const char *filename2)
     return file__compare(f1, f2);
 }
 
-bool file_equals(const char *filename1, const char *filename2)
+bool
+file_equals(const char *filename1, const char *filename2)
 {
     file_t *f1 = fopen(filename1, "rb");
     file_t *f2 = fopen(filename2, "rb");
@@ -128,7 +135,8 @@ bool file_equals(const char *filename1, const char *filename2)
     return !file__compare(f1, f2);
 }
 
-void file_copy(const char *from, const char *to)
+void
+file_copy(const char *from, const char *to)
 {
     char buf[2048];
     size_t nread;
@@ -157,16 +165,19 @@ void file_copy(const char *from, const char *to)
     fclose(f2);
 }
 
-bool file_exists(const char *filename)
+bool
+file_exists(const char *filename)
 {
     struct stat buf;
     return stat(filename, &buf) == 0;
 }
 
-char *file_load_cstr(const char *filename, size_t *length)
+char *
+file_load_cstr(const char *filename, size_t *length)
 {
     char *buf;
     size_t len;
+
     if (length)
     {
         buf = file__load(filename, length, 1);
@@ -181,7 +192,8 @@ char *file_load_cstr(const char *filename, size_t *length)
     return buf;
 }
 
-void *file_load(const char *filename, size_t *length)
+void *
+file_load(const char *filename, size_t *length)
 {
     return file__load(filename, length, 0);
 }

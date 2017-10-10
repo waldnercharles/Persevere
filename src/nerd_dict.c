@@ -1,6 +1,7 @@
 #include "nerd_dict.h"
 
-static uint dict__hash(char *str)
+static uint
+dict__hash(char *str)
 {
     uint hash = 0;
     while (*str)
@@ -11,9 +12,11 @@ static uint dict__hash(char *str)
     return hash + (hash >> 16);
 }
 
-static struct dict_key_value *dict__get_key_value(struct dict_bucket *bucket, char *key)
+static struct dict_key_value *
+dict__get_key_value(struct dict_bucket *bucket, char *key)
 {
     struct dict_key_value *kv;
+    uint i;
 
     if (bucket == NULL || bucket->count == 0)
     {
@@ -21,7 +24,7 @@ static struct dict_key_value *dict__get_key_value(struct dict_bucket *bucket, ch
     }
 
     kv = bucket->pairs;
-    for (uint i = 0; i < bucket->count; i++, kv++)
+    for (i = 0; i < bucket->count; i++, kv++)
     {
         if (kv->key == NULL || kv->value == NULL)
         {
@@ -35,7 +38,8 @@ static struct dict_key_value *dict__get_key_value(struct dict_bucket *bucket, ch
     return NULL;
 }
 
-struct dict *dict_new(uint capacity)
+struct dict *
+dict_new(uint capacity)
 {
     struct dict *dict = malloc(sizeof(struct dict));
 
@@ -57,10 +61,12 @@ struct dict *dict_new(uint capacity)
     return dict;
 }
 
-void dict_delete(struct dict *dict)
+void
+dict_delete(struct dict *dict)
 {
     struct dict_bucket *bucket;
     struct dict_key_value *kv;
+    uint i, j;
 
     if (dict == NULL)
     {
@@ -68,10 +74,10 @@ void dict_delete(struct dict *dict)
     }
 
     bucket = dict->buckets;
-    for (uint i = 0; i < dict->count; i++, bucket++)
+    for (i = 0; i < dict->count; i++, bucket++)
     {
         kv = bucket->pairs;
-        for (uint j = 0; j < bucket->count; j++, kv++)
+        for (j = 0; j < bucket->count; j++, kv++)
         {
             free(kv->key);
             free(kv->value);
@@ -82,7 +88,8 @@ void dict_delete(struct dict *dict)
     free(dict);
 }
 
-void *dict_get(struct dict *dict, char *key)
+void *
+dict_get(struct dict *dict, char *key)
 {
     uint idx;
     struct dict_bucket *bucket;
@@ -104,7 +111,8 @@ void *dict_get(struct dict *dict, char *key)
     return kv->value;
 }
 
-void dict_set(struct dict *dict, char *key, void *value)
+void
+dict_set(struct dict *dict, char *key, void *value)
 {
     uint idx;
     struct dict_bucket *bucket;
@@ -131,7 +139,8 @@ void dict_set(struct dict *dict, char *key, void *value)
     }
     else
     {
-        kv = realloc(bucket->pairs, (++bucket->count) * sizeof(struct dict_key_value));
+        kv = realloc(bucket->pairs,
+                     (++bucket->count) * sizeof(struct dict_key_value));
     }
 
     if (kv == NULL)
@@ -146,7 +155,8 @@ void dict_set(struct dict *dict, char *key, void *value)
     strcpy(kv->key, key);
 }
 
-bool dict_exists(struct dict *dict, char *key)
+bool
+dict_exists(struct dict *dict, char *key)
 {
     uint idx;
     struct dict_bucket *bucket;

@@ -25,7 +25,8 @@ struct mem_allocation
 
 static struct mem_allocation *allocation_head;
 
-void *mem__malloc(size_t size, char *file, int line)
+void *
+mem__malloc(size_t size, char *file, int line)
 {
     if (size == 0)
     {
@@ -54,7 +55,8 @@ void *mem__malloc(size_t size, char *file, int line)
     return alloc + 1;
 }
 
-void mem__free(void *ptr)
+void
+mem__free(void *ptr)
 {
     if (ptr == NULL)
     {
@@ -79,7 +81,8 @@ void mem__free(void *ptr)
     free(ptr);
 }
 
-void *mem__realloc(void *ptr, size_t size, char *file, int line)
+void *
+mem__realloc(void *ptr, size_t size, char *file, int line)
 {
     if (ptr == NULL)
     {
@@ -109,7 +112,8 @@ void *mem__realloc(void *ptr, size_t size, char *file, int line)
     return new_ptr;
 }
 
-void *mem__calloc(size_t num_items, size_t size, char *file, int line)
+void *
+mem__calloc(size_t num_items, size_t size, char *file, int line)
 {
     if (num_items == 0 || size == 0)
     {
@@ -130,7 +134,8 @@ void *mem__calloc(size_t num_items, size_t size, char *file, int line)
     return new_ptr;
 }
 
-char *mem__strdup(char *str, char *file, int line)
+char *
+mem__strdup(char *str, char *file, int line)
 {
     char *ptr = mem__malloc(strlen(str) + 1, file, line);
     if (ptr == NULL)
@@ -141,7 +146,8 @@ char *mem__strdup(char *str, char *file, int line)
     return ptr;
 }
 
-void mem_dump()
+void
+mem_dump()
 {
     struct mem_allocation *alloc = allocation_head;
     while (alloc != NULL)

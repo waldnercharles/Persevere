@@ -10,7 +10,7 @@
     v.y eq v0.y op n
 
 #define vec3_op(v, eq, v0, op, v1)                                             \
-    v.x eq v0.x op v1.y,                                                       \
+    v.x eq v0.x op v1.x,                                                       \
     v.y eq v0.y op v1.y,                                                       \
     v.z eq v0.z op v1.z
 
@@ -411,7 +411,11 @@ mat4_rotate(union vec3 axis, float angle_radians)
 }
 
 union mat4
-mat4_ortho(float left, float right, float bottom, float top, float near,
+mat4_ortho(float left,
+           float right,
+           float bottom,
+           float top,
+           float near,
            float far)
 {
     union mat4 m = mat4(1.0f);

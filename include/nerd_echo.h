@@ -64,15 +64,11 @@ void echo_init(struct echo *echo);
 
 void echo_process(struct echo *echo, float dt);
 
-void echo_component_create(struct echo *echo,
-                           const char *name,
-                           size_t size,
-                           uint *component);
+uint echo_component_create(struct echo *echo, const char *name, size_t size);
 
-void echo_system_create(struct echo *echo,
+uint echo_system_create(struct echo *echo,
                         const char *name,
-                        echo__process_func_t process,
-                        uint *system);
+                        echo__process_func_t process);
 
 void echo_system_watch_component(struct echo *echo,
                                  uint system,
@@ -80,14 +76,11 @@ void echo_system_watch_component(struct echo *echo,
 
 void echo_system_process(struct echo *echo, uint system, float dt);
 
-void echo_entity_create(struct echo *echo, uint *entity);
+uint echo_entity_create(struct echo *echo);
 
-void echo_entity_clone(struct echo *echo, uint prototype, uint *entity);
+uint echo_entity_clone(struct echo *echo, uint prototype);
 
-void echo_entity_get_component(struct echo *echo,
-                               uint entity,
-                               uint component,
-                               void **data);
+void *echo_entity_get_component(struct echo *echo, uint entity, uint component);
 
 void echo_entity_set_component(struct echo *echo,
                                uint entity,

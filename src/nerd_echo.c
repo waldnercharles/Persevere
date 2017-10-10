@@ -54,6 +54,7 @@ void
 echo_process(struct echo *echo, float dt)
 {
     uint *entity;
+    uint i;
     struct echo_system *system;
 
     // TODO: Handle added event
@@ -91,7 +92,7 @@ echo_process(struct echo *echo, float dt)
             echo__unsubscribe(system, *entity);
         }
         // TODO: Handle deleted event
-        for (uint i = 0; i < echo->num_components; i++)
+        for (i = 0; i < echo->num_components; i++)
         {
             echo_entity_del_component(echo, *entity, i);
         }
@@ -110,11 +111,8 @@ echo_process(struct echo *echo, float dt)
 }
 
 // component
-void
-echo_component_create(struct echo *echo,
-                      const char *name,
-                      size_t size,
-                      uint *component)
+uint
+echo_component_create(struct echo *echo, const char *name, size_t size)
 {
     struct echo_component c = { 0 };
     c.name = name;
@@ -124,22 +122,21 @@ echo_component_create(struct echo *echo,
     echo->data_width += size;
 
     array_push(echo->components, c);
-    *component = ++(echo->num_components) - 1;
+    return ++(echo->num_components) - 1;
 }
 
 // system
-void
+uint
 echo_system_create(struct echo *echo,
                    const char *name,
-                   echo__process_func_t process,
-                   uint *system)
+                   echo__process_func_t process)
 {
     struct echo_system s = { 0 };
     s.name = name;
     s.process = process;
 
     array_push(echo->systems, s);
-    *system = ++(echo->num_systems) - 1;
+    return ++(echo->num_systems) - 1;
 }
 
 void
@@ -156,8 +153,8 @@ echo_system_process(struct echo *echo, uint system, float dt)
 }
 
 // entity
-void
-echo_entity_create(struct echo *echo, uint *entity)
+uint
+echo_entity_create(struct echo *echo)
 {
     uint id = sparse_set_is_empty(&echo->free_entities)
                   ? echo->next_entity_id++
@@ -165,28 +162,26 @@ echo_entity_create(struct echo *echo, uint *entity)
 
     array__grow_if_required_sz(echo->data, id, echo->data_width);
 
-    *entity = id;
+    return id;
 }
 
-void
-echo_entity_clone(struct echo *echo, uint prototype, uint *entity)
+uint
+echo_entity_clone(struct echo *echo, uint prototype)
 {
-    (void)echo, (void)prototype, (void)entity;
+    (void)echo, (void)prototype;
     // TODO
+    return -1;
 }
 
-void
-echo_entity_get_component(struct echo *echo,
-                          uint entity,
-                          uint component,
-                          void **data)
+void *
+echo_entity_get_component(struct echo *echo, uint entity, uint component)
 {
     uint8 *entity_data = echo__entity_get_data(echo, entity);
     struct echo_component *component_info = &(echo->components[component]);
 
     // TODO: Check if component's bit is set before trying to grab it?
 
-    *data = (void *)(entity_data + component_info->offset);
+    return (void *)(entity_data + component_info->offset);
 }
 
 void

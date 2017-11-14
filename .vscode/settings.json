@@ -9,7 +9,7 @@
         "-Wpointer-arith",
         "-Wno-missing-braces",
         "-std=c99",
-        "-I${workspaceFolder}/include",
+        "-I${workspaceRoot}/include",
         "-isystem",
         "c:/msys64/mingw32/include"
     ],
@@ -21,7 +21,7 @@
         "-Wshadow",
         "-Wpointer-arith",
         "-std=c++98",
-        "-I${workspaceFolder}/include",
+        "-I${workspaceRoot}/include",
         "-isystem",
         "c:/msys64/mingw32/include"
     ],

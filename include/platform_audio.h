@@ -1,6 +1,6 @@
-#ifndef NERD_AUDIO_H
-#define NERD_AUDIO_H
-#include "nerd_engine.h"
+#ifndef AUDIO_H
+#define AUDIO_H
+#include "std.h"
 
 void audio_init(struct game *game);
 

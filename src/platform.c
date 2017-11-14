@@ -1,14 +1,14 @@
 #define SDL_MAIN_HANDLED
 
-#include "nerd.h"
-#include "game_core.h"
+#include "engine.h"
+#include "game.h"
 
-#include "nerd_dynlib.c"
-#include "nerd_file.c"
-#include "nerd_math.c"
-#include "nerd_mixer.c"
-#include "nerd_shader.c"
-#include "nerd_string.c"
+#include "dynlib.c"
+#include "file.c"
+#include "vec.c"
+#include "mixer.c"
+#include "shader.c"
+#include "str.c"
 
 #include "platform_audio.c"
 

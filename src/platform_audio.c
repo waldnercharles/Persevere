@@ -1,8 +1,8 @@
 #include "platform_audio.h"
 
-#include "nerd.h"
-#include "nerd_mixer.h"
-#include "nerd_log.h"
+#include "engine.h"
+#include "mixer.h"
+#include "log.h"
 
 static void
 audio_callback(void *userdata, u8 *stream, s32 len)

@@ -1,7 +1,7 @@
-#include "nerd.h"
-#include "nerd_array.h"
-#include "nerd_math.h"
-#include "nerd_renderer.h"
+#include "engine.h"
+#include "array.h"
+#include "vec.h"
+#include "renderer.h"
 
 #include "systems/render_system.h"
 
@@ -9,10 +9,10 @@
 #include "components/render_component.h"
 
 void
-render_system_process_begin(struct echo *echo, void *u_data)
+render_system_process_begin(struct ecs *ecs, void *u_data)
 {
     struct game *game;
-    unused(echo);
+    unused(ecs);
 
     game = u_data;
     array__len(game->renderer->sprites) = 0;
@@ -20,7 +20,7 @@ render_system_process_begin(struct echo *echo, void *u_data)
 }
 
 void
-render_system_process(struct echo *echo, void *u_data, u32 entity, f32 dt)
+render_system_process(struct ecs *ecs, void *u_data, u32 entity, f32 dt)
 {
     struct game *game;
     struct body *body;
@@ -32,8 +32,8 @@ render_system_process(struct echo *echo, void *u_data, u32 entity, f32 dt)
 
     game = u_data;
 
-    echo_get_component(echo, entity, body_component, (void **)&body);
-    echo_get_component(echo, entity, render_component, (void **)&render);
+    ecs_get_component(ecs, entity, body_component, (void **)&body);
+    ecs_get_component(ecs, entity, render_component, (void **)&render);
 
     sprite.pos = body->pos;
     sprite.size = body->size;
@@ -48,7 +48,7 @@ render_system_process(struct echo *echo, void *u_data, u32 entity, f32 dt)
 }
 
 void
-render_system_process_end(struct echo *echo, void *u_data)
+render_system_process_end(struct ecs *ecs, void *u_data)
 {
     static u32 *temp = NULL;
     struct game *game;
@@ -69,5 +69,5 @@ render_system_process_end(struct echo *echo, void *u_data)
     // TODO: Sort temp by sprites[temp] and states[temp]
     // TODO: Re-order sprites and states according to temp order.
 
-    (void)echo;
+    (void)ecs;
 }

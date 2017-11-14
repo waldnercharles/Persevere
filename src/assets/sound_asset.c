@@ -1,4 +1,4 @@
-#include "nerd_mixer.h"
+#include "mixer.h"
 
 void *
 asset_load_sound(const char *filename, void *udata)

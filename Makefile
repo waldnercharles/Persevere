@@ -18,10 +18,10 @@ pre: $(INCLUDE)/nerd_engine.h
 	@$(CC) $(CFLAGS) $(SYS_INCLUDE) $(INCLUDE)/nerd_engine.h
 	@echo "Precompiling engine header...Done"
 
-game: $(SRC)/game_core.c
+game: $(SRC)/game.c
 	@echo "Building Game..."
 	@echo "WAITING FOR COMPILE..." > $(BIN)/$(PRJ)-core.lock
-	@$(CC) $(CFLAGS) $(SYS_INCLUDE) -shared $(SRC)/game_core.c -o $(BIN)/$(PRJ)-core.dll -lopengl32 -lglew32
+	@$(CC) $(CFLAGS) $(SYS_INCLUDE) -shared $(SRC)/game.c -o $(BIN)/$(PRJ)-core.dll -lopengl32 -lglew32
 	@echo "Building Game...Done"
 	@$(RM) $(BIN)/$(PRJ)-core.lock
 

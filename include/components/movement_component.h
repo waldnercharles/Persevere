@@ -1,6 +1,6 @@
 #pragma once
-#include "nerd_engine.h"
-#include "nerd_math.h"
+#include "std.h"
+#include "vec.h"
 
 struct movement
 {

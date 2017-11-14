@@ -1,5 +1,5 @@
 #include "assets/shader_asset.h"
-#include "nerd_shader.h"
+#include "shader.h"
 
 void *
 asset_load_fragment_shader(const char *filename, void *udata)

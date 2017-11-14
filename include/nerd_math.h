@@ -1,13 +1,12 @@
-#pragma once
+#ifndef NERD_MATH_H
+#define NERD_MATH_H
+#include "nerd_engine.h"
 
-#include "nerd.h"
-#include "nerd_typedefs.h"
+bool math_is_pow2(u32 n);
+s32 math_floor_log2(u32 n);
+s32 math_ceil_log2(u32 n);
 
-bool math_is_pow2(uint n);
-int math_floor_log2(uint n);
-int math_ceil_log2(uint n);
-
-float math_radians(float degrees);
+f32 math_radians(f32 degrees);
 
 #define math_min(a, b) ((a) < (b) ? (a) : (b))
 #define math_max(a, b) ((a) > (b) ? (a) : (b))
@@ -43,32 +42,33 @@ float math_radians(float degrees);
 // clang-format off
 union vec2
 {
-    struct { float x, y; };
-    float e[2];
+    struct { f32 x, y; };
+    f32 e[2];
 };
 
 union vec3
 {
-    struct { float x, y, z; };
-    struct { float r, g, b; };
+    struct { f32 x, y, z; };
+    struct { f32 r, g, b; };
     union vec2 xy;
-    float e[3];
+    f32 e[3];
 };
 
 union vec4
 {
-    struct { float x, y, z, w; };
-    struct { float r, g, b, a; };
+    struct { f32 x, y, z, w; };
+    struct { f32 r, g, b, a; };
+    struct { f32 top, right, bottom, left; };
     struct { union vec2 xy, zw; };
     union vec3 xyz;
     union vec3 rgb;
-    float e[4];
+    f32 e[4];
 };
 // clang-format on
 
-union vec2 vec2(float x, float y);
-union vec3 vec3(float x, float y, float z);
-union vec4 vec4(float x, float y, float z, float w);
+union vec2 vec2(f32 x, f32 y);
+union vec3 vec3(f32 x, f32 y, f32 z);
+union vec4 vec4(f32 x, f32 y, f32 z, f32 w);
 
 union vec2 vec2_zero();
 union vec3 vec3_zero();
@@ -76,38 +76,40 @@ union vec4 vec4_zero();
 
 union vec2 vec2_add(union vec2 a, union vec2 b);
 union vec2 vec2_sub(union vec2 a, union vec2 b);
-union vec2 vec2_mul(union vec2 v, float n);
-union vec2 vec2_div(union vec2 v, float n);
+union vec2 vec2_mul(union vec2 v, f32 n);
+union vec2 vec2_div(union vec2 v, f32 n);
 
 union vec3 vec3_add(union vec3 a, union vec3 b);
 union vec3 vec3_sub(union vec3 a, union vec3 b);
-union vec3 vec3_mul(union vec3 v, float n);
-union vec3 vec3_div(union vec3 v, float n);
+union vec3 vec3_mul(union vec3 v, f32 n);
+union vec3 vec3_div(union vec3 v, f32 n);
 
 union vec4 vec4_add(union vec4 a, union vec4 b);
 union vec4 vec4_sub(union vec4 a, union vec4 b);
-union vec4 vec4_mul(union vec4 v, float n);
-union vec4 vec4_div(union vec4 v, float n);
+union vec4 vec4_mul(union vec4 v, f32 n);
+union vec4 vec4_div(union vec4 v, f32 n);
 
 union vec2 vec2_norm(union vec2 v);
 union vec3 vec3_norm(union vec3 v);
 union vec4 vec4_norm(union vec4 v);
 
-float vec2_dot(union vec2 a, union vec2 b);
-float vec3_dot(union vec3 a, union vec3 b);
-float vec4_dot(union vec4 a, union vec4 b);
+union vec2 vec2_rotate(union vec2 v, f32 theta);
 
-float vec2_mag(union vec2 v);
-float vec3_mag(union vec3 v);
-float vec4_mag(union vec4 v);
+f32 vec2_dot(union vec2 a, union vec2 b);
+f32 vec3_dot(union vec3 a, union vec3 b);
+f32 vec4_dot(union vec4 a, union vec4 b);
+
+f32 vec2_mag(union vec2 v);
+f32 vec3_mag(union vec3 v);
+f32 vec4_mag(union vec4 v);
 
 // clang-format off
 union mat2
 {
     struct { union vec2 x, y; };
     union vec2 col[2];
-    float m[2][2];
-    float e[4];
+    f32 m[2][2];
+    f32 e[4];
 
 };
 
@@ -115,20 +117,19 @@ union mat3
 {
     struct { union vec3 x, y, z; };
     union vec3 col[3];
-    float m[3][3];
-    float e[9];
+    f32 m[3][3];
+    f32 e[9];
 
 };
 
 union mat4
 {
-    struct { union vec4 x, y, z, w };
+    struct { union vec4 x, y, z, w; };
     union vec4 col[4];
-    float m[4][4];
-    float e[16];
+    f32 m[4][4];
+    f32 e[16];
 };
-
-// clang-fromat on
+// clang-format on
 
 union vec2 mat2_mul_vec2(union mat2 m, union vec2 v);
 union vec3 mat3_mul_vec3(union mat3 m, union vec3 v);
@@ -138,9 +139,9 @@ union mat2 mat2_zero();
 union mat3 mat3_zero();
 union mat4 mat4_zero();
 
-union mat2 mat2(float d);
-union mat3 mat3(float d);
-union mat4 mat4(float d);
+union mat2 mat2(f32 d);
+union mat3 mat3(f32 d);
+union mat4 mat4(f32 d);
 
 union mat2 mat2_transpose(union mat2 m);
 union mat3 mat3_transpose(union mat3 m);
@@ -150,13 +151,14 @@ union mat4 mat4_mul(union mat4 a, union mat4 b);
 
 union mat4 mat4_translate(union vec3 v);
 union mat4 mat4_scale(union vec3 v);
-union mat4 mat4_rotate(union vec3 axis, float angle_radians);
+union mat4 mat4_rotate(union vec3 axis, f32 angle_radians);
 
-union mat4 mat4_ortho(float left,
-                      float right,
-                      float bottom,
-                      float top,
-                      float near,
-                      float far);
+union mat4 mat4_ortho(f32 left,
+                      f32 right,
+                      f32 bottom,
+                      f32 top,
+                      f32 near,
+                      f32 far);
 
-union mat4 mat4_perspective(float fovy, float aspect, float near, float far);
+union mat4 mat4_perspective(f32 fovy, f32 aspect, f32 near, f32 far);
+#endif

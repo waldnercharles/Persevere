@@ -2,13 +2,14 @@
     "clang.cflags": [
         "-Wall",
         "-Wextra",
+        "-Werror",
         "-Wfloat-equal",
         "-Wundef",
         "-Wshadow",
         "-Wpointer-arith",
         "-Wno-missing-braces",
         "-std=c99",
-        "-I${workspaceRoot}/include",
+        "-I${workspaceFolder}/include",
         "-isystem",
         "c:/msys64/mingw32/include"
     ],
@@ -20,7 +21,7 @@
         "-Wshadow",
         "-Wpointer-arith",
         "-std=c++98",
-        "-I${workspaceRoot}/include",
+        "-I${workspaceFolder}/include",
         "-isystem",
         "c:/msys64/mingw32/include"
     ],
@@ -30,7 +31,7 @@
             {
                 "match": ".*",
                 "isAsync": false,
-                "cmd": "cd ${workspaceRoot} && make"
+                "cmd": "cd ${workspaceFolder} && make -j3"
             }
         ]
     }

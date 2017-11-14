@@ -30,6 +30,9 @@ CTestTestfile.cmake
 *.app
 
 # Visual Studio
+*.DB
+*.DB-shm
+*.DB-wal
 *.suo
 *.user
 *.userosscache

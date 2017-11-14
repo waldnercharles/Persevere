@@ -1,11 +1,25 @@
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#if !defined(_WIN32) && !defined(_WIN64)
+#include <unistd.h>
+#else
+#define stat _stat
+#endif
+
 #include "nerd_file.h"
+#include "nerd_math.h"
 
 static void *
-file__load(const char *filename, size_t *length, size_t additional_length)
+file__load(const char *filename, u32 *length, u32 additional_length)
 {
     void *buf;
-    size_t len, read_len;
-    file_t *f = fopen(filename, "rb");
+    u32 len, read_len;
+    FILE *f = fopen(filename, "rb");
 
     if (f == NULL)
     {
@@ -39,12 +53,12 @@ file__load(const char *filename, size_t *length, size_t additional_length)
     return buf;
 }
 
-static int
-file__compare(file_t *f1, file_t *f2)
+static s32
+file__compare(FILE *f1, FILE *f2)
 {
-    char buf1[2048], buf2[2048];
-    size_t size1, size2;
-    int cmp = 0;
+    u8 buf1[2048], buf2[2048];
+    u32 size1, size2;
+    s32 cmp = 0;
     while (1)
     {
         size1 = fread(buf1, 1, sizeof(buf1), f1);
@@ -68,10 +82,10 @@ file__compare(file_t *f1, file_t *f2)
     return cmp;
 }
 
-size_t
-file_length(file_t *f)
+u32
+file_length(FILE *f)
 {
-    size_t pos, len;
+    u32 pos, len;
 
     pos = ftell(f);
     fseek(f, 0, SEEK_END);
@@ -82,11 +96,11 @@ file_length(file_t *f)
     return len;
 }
 
-int
+s32
 file_compare(const char *filename1, const char *filename2)
 {
-    file_t *f1 = fopen(filename1, "rb");
-    file_t *f2 = fopen(filename2, "rb");
+    FILE *f1 = fopen(filename1, "rb");
+    FILE *f2 = fopen(filename2, "rb");
 
     if (f1 == NULL || f2 == NULL)
     {
@@ -109,8 +123,8 @@ file_compare(const char *filename1, const char *filename2)
 bool
 file_equals(const char *filename1, const char *filename2)
 {
-    file_t *f1 = fopen(filename1, "rb");
-    file_t *f2 = fopen(filename2, "rb");
+    FILE *f1 = fopen(filename1, "rb");
+    FILE *f2 = fopen(filename2, "rb");
 
     if (f1 == NULL || f2 == NULL)
     {
@@ -139,10 +153,10 @@ void
 file_copy(const char *from, const char *to)
 {
     char buf[2048];
-    size_t nread;
+    u32 nread;
 
-    file_t *f1 = fopen(from, "rb");
-    file_t *f2 = fopen(to, "wb");
+    FILE *f1 = fopen(from, "rb");
+    FILE *f2 = fopen(to, "wb");
 
     if (f1 == NULL || f2 == NULL)
     {
@@ -173,10 +187,10 @@ file_exists(const char *filename)
 }
 
 char *
-file_load_cstr(const char *filename, size_t *length)
+file_load_cstr(const char *filename, u32 *length)
 {
     char *buf;
-    size_t len;
+    u32 len = 0;
 
     if (length)
     {
@@ -193,7 +207,7 @@ file_load_cstr(const char *filename, size_t *length)
 }
 
 void *
-file_load(const char *filename, size_t *length)
+file_load(const char *filename, u32 *length)
 {
     return file__load(filename, length, 0);
 }

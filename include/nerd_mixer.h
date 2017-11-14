@@ -1,23 +1,17 @@
-#pragma once
-
-#include "nerd.h"
-#include "nerd_file.h"
-#include "nerd_math.h"
-#include "nerd_memory.h"
-#include "nerd_typedefs.h"
-
-#include "stb_vorbis.h"
+#ifndef NERD_MIXER_H
+#define NERD_MIXER_H
+#include "nerd_engine.h"
 
 #define MIXER_BUFFER_SIZE (512)
 #define MIXER_BUFFER_MASK (MIXER_BUFFER_SIZE - 1)
 
 struct mixer_event
 {
-    int type;
+    s32 type;
     void *udata;
     const char *msg;
-    int16 *buffer;
-    int length;
+    short *buffer;
+    s32 length;
 };
 
 typedef void (*mixer_event_handler)(struct mixer_event *e);
@@ -26,30 +20,30 @@ struct mixer_source_info
 {
     mixer_event_handler handler;
     void *udata;
-    int samplerate;
-    int length;
+    s32 samplerate;
+    s32 length;
 };
 
 struct mixer_source
 {
     struct mixer_source *next;       /* Next source in list */
-    int16 buffer[MIXER_BUFFER_SIZE]; /* Internal buffer with raw stereo PCM */
+    short buffer[MIXER_BUFFER_SIZE]; /* Internal buffer with raw stereo PCM */
     mixer_event_handler handler;     /* Event handler */
 
     void *udata;      /* Stream's udata (from Mixer_SourceInfo) */
-    int samplerate;   /* Stream's native samplerate */
-    int length;       /* Stream's length in frames */
-    int end;          /* End index for the current play-through */
-    int state;        /* Current state (playing|paused|stopped) */
-    int64 position;   /* Current playhead position (fixed point) */
-    int lgain, rgain; /* Left and right gain (fixed point) */
-    int rate;         /* Playback rate (fixed point) */
-    int nextfill;     /* Next frame idx where the buffer needs to be filled */
-    int loop;         /* Whether the source will loop when `end` is reached */
-    int rewind;       /* Whether the source will rewind before playing */
-    int active;       /* Whether the source is part of `sources` list */
-    double gain;      /* Gain set by `mixer_set_gain()` */
-    double pan;       /* Pan set by `mixer_set_pan()` */
+    s32 samplerate;   /* Stream's native samplerate */
+    s32 length;       /* Stream's length in frames */
+    s32 end;          /* End index for the current play-through */
+    s32 state;        /* Current state (playing|paused|stopped) */
+    s64 position;     /* Current playhead position (fixed point) */
+    s32 lgain, rgain; /* Left and right gain (fixed point) */
+    s32 rate;         /* Playback rate (fixed point) */
+    s32 nextfill;     /* Next frame idx where the buffer needs to be filled */
+    bool loop;        /* Whether the source will loop when `end` is reached */
+    bool rewind;      /* Whether the source will rewind before playing */
+    bool active;      /* Whether the source is part of `sources` list */
+    f64 gain;         /* Gain set by `mixer_set_gain()` */
+    f64 pan;          /* Pan set by `mixer_set_pan()` */
 };
 
 enum
@@ -70,25 +64,22 @@ enum
 
 struct mixer
 {
-    const char *lasterror;         /* Last error message */
-    mixer_event_handler lock;      /* Event handler for lock/unlock events */
     struct mixer_source *sources;  /* Linked list of active (playing) sources */
-    int buffer[MIXER_BUFFER_SIZE]; /* Internal master buffer */
-    int samplerate;                /* Master samplerate */
-    int gain;                      /* Master gain (fixed point) */
-};
-
-struct ogg_stream
-{
-    stb_vorbis *ogg;
-    void *data;
+    u32 audio_device;              /* Audio device passed to lock/unlock */
+    mixer_event_handler lock;      /* Event handler for lock/unlock events */
+    s32 buffer[MIXER_BUFFER_SIZE]; /* Internal master buffer */
+    const char *lasterror;         /* Last error message */
+    s32 samplerate;                /* Master samplerate */
+    s32 gain;                      /* Master gain (fixed point) */
 };
 
 const char *mixer_get_error(struct mixer *mixer);
-void mixer_init(struct mixer *mixer, int samplerate);
+
+struct mixer *mixer_new();
+void mixer_init(struct mixer *mixer, s32 samplerate);
 void mixer_set_lock(struct mixer *mixer, mixer_event_handler lock);
-void mixer_set_master_gain(struct mixer *mixer, double gain);
-void mixer_process(struct mixer *mixer, int16 *destination, int length);
+void mixer_set_master_gain(struct mixer *mixer, f64 gain);
+void mixer_process(struct mixer *mixer, short *destination, s32 length);
 
 struct mixer_source *mixer_new_source(struct mixer *mixer,
                                       const struct mixer_source_info *info);
@@ -98,20 +89,20 @@ struct mixer_source *mixer_new_source_from_file(struct mixer *mixer,
 
 struct mixer_source *mixer_new_source_from_mem(struct mixer *mixer,
                                                void *data,
-                                               int size);
+                                               s32 size);
 
 void mixer_destroy_source(struct mixer *mixer, struct mixer_source *source);
-double mixer_get_length(struct mixer_source *source);
-double mixer_get_position(struct mixer_source *source);
-int mixer_get_state(struct mixer_source *source);
-void mixer_set_gain(struct mixer_source *source, double gain);
-void mixer_set_pan(struct mixer_source *source, double pan);
+f64 mixer_get_length(struct mixer_source *source);
+f64 mixer_get_position(struct mixer_source *source);
+s32 mixer_get_state(struct mixer_source *source);
+void mixer_set_gain(struct mixer_source *source, f64 gain);
+void mixer_set_pan(struct mixer_source *source, f64 pan);
 
 void mixer_set_pitch(struct mixer *mixer,
                      struct mixer_source *source,
-                     double pitch);
+                     f64 pitch);
 
-void mixer_set_loop(struct mixer_source *source, int loop);
+void mixer_set_loop(struct mixer_source *source, bool loop);
 void mixer_play(struct mixer *mixer, struct mixer_source *source);
 void mixer_pause(struct mixer_source *source);
 void mixer_stop(struct mixer_source *source);
@@ -124,3 +115,4 @@ void mixer_stop(struct mixer_source *source);
 #define FX_MASK (FX_UNIT - 1)
 #define FX_FROM_FLOAT(f) ((f)*FX_UNIT)
 #define FX_LERP(a, b, p) ((a) + ((((b) - (a)) * (p)) >> FX_BITS))
+#endif

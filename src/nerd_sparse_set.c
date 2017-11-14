@@ -1,14 +1,19 @@
 #include "nerd_sparse_set.h"
 
 void
-sparse_set_insert(struct sparse_set *s, uint value)
+sparse_set_insert(struct sparse_set *s, u32 value)
 {
-    uint dbl_cap, index, n;
+    u32 dbl_cap, index, n, new_size;
     if (value >= s->capacity)
     {
         dbl_cap = (value + 1) * 2;
-        s->sparse = realloc(s->sparse, sizeof(uint) * dbl_cap);
-        s->dense = realloc(s->dense, sizeof(uint) * dbl_cap);
+        s->sparse = realloc(s->sparse, sizeof(u32) * dbl_cap);
+        s->dense = realloc(s->dense, sizeof(u32) * dbl_cap);
+
+        new_size = (dbl_cap - s->capacity) * sizeof(u32);
+
+        memset(s->sparse + s->capacity, 0, new_size);
+        memset(s->dense + s->capacity, 0, new_size);
 
         s->capacity = dbl_cap;
     }
@@ -23,9 +28,9 @@ sparse_set_insert(struct sparse_set *s, uint value)
 }
 
 void
-sparse_set_delete(struct sparse_set *s, uint value)
+sparse_set_delete(struct sparse_set *s, u32 value)
 {
-    uint temp, index, n;
+    u32 temp, index, n;
     if (value >= s->capacity || s->population == 0)
         return;
 
@@ -40,7 +45,7 @@ sparse_set_delete(struct sparse_set *s, uint value)
     }
 }
 
-uint
+u32
 sparse_set_pop(struct sparse_set *s)
 {
     return s->population >= 1 ? s->dense[--s->population] : UINT_MAX;
@@ -52,7 +57,7 @@ sparse_set_clear(struct sparse_set *s)
     s->population = 0;
 }
 
-int
+bool
 sparse_set_is_empty(struct sparse_set *s)
 {
     return s->population == 0;

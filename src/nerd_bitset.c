@@ -1,18 +1,22 @@
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "nerd_bitset.h"
 
 // clang-format off
-uint bitset_mask(uint b) { return (1 << (b & 7)); }
-uint bitset_slot(uint b) { return b >> 3; }
-uint bitset_nslots(uint b) { return (b + 7) >> 3; }
-void bitset_set(uint8 *bytes, uint b) { bytes[bitset_slot(b)] |= bitset_mask(b); }
-void bitset_clear(uint8 *bytes, uint b) { bytes[bitset_slot(b)] &= ~bitset_mask(b); }
-bool bitset_test(uint8 *bytes, uint b) { return bytes[bitset_slot(b)] & bitset_mask(b); }
+u32 bitset_mask(u32 b) { return (1 << (b & 7)); }
+u32 bitset_slot(u32 b) { return b >> 3; }
+u32 bitset_nslots(u32 b) { return (b + 7) >> 3; }
+void bitset_set(u8 *bytes, u32 b) { bytes[bitset_slot(b)] |= bitset_mask(b); }
+void bitset_clear(u8 *bytes, u32 b) { bytes[bitset_slot(b)] &= ~bitset_mask(b); }
+bool bitset_test(u8 *bytes, u32 b) { return bytes[bitset_slot(b)] & bitset_mask(b); }
 // clang-format on
 
 void
-bitset_insert(struct bitset *bitset, uint value)
+bitset_insert(struct bitset *bitset, u32 value)
 {
-    uint old_size, new_size, new_capacity;
+    u32 old_size, new_size, new_capacity;
     if (value >= bitset->capacity)
     {
         new_capacity = (value + 1) * 2;
@@ -29,7 +33,7 @@ bitset_insert(struct bitset *bitset, uint value)
 }
 
 void
-bitset_delete(struct bitset *bitset, uint value)
+bitset_delete(struct bitset *bitset, u32 value)
 {
     if (value < bitset->capacity)
     {

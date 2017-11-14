@@ -1,11 +1,9 @@
-#pragma once
-
-#include "nerd.h"
-#include "nerd_file.h"
-#include "nerd_string.h"
+#ifndef NERD_DYNLIB_H
+#define NERD_DYNLIB_H
+#include "nerd_engine.h"
 
 typedef void game_init_func(void *game_state);
-typedef void game_loop_func(void *game_state, float dt);
+typedef void game_loop_func(void *game_state, f32 dt);
 
 struct game_dll
 {
@@ -18,3 +16,4 @@ struct game_dll
 void unload_game(struct game_dll *game);
 void load_game(char *library_name, struct game_dll *game);
 void load_game_if_new(char *library_name, struct game_dll *game);
+#endif

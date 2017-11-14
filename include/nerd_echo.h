@@ -1,45 +1,45 @@
-#pragma once
-
-#include "nerd.h"
-#include "nerd_array.h"
+#ifndef NERD_ECHO_H
+#define NERD_ECHO_H
+#include "nerd_engine.h"
 #include "nerd_bitset.h"
 #include "nerd_sparse_set.h"
-#include "nerd_typedefs.h"
 
 struct echo;
 
-typedef void (*echo__process_func_t)(struct echo *echo, uint entity, float dt);
+typedef void(*echo__process_func_t);
 
 enum echo_state
 {
-    ECHO_ENTITY_ADDED,
-    ECHO_ENTITY_ENABLED,
-    ECHO_ENTITY_DISABLED,
-    ECHO_ENTITY_DELETED,
+    ECHO_STATE_ADDED,
+    ECHO_STATE_ENABLED,
+    ECHO_STATE_DISABLED,
+    ECHO_STATE_DELETED,
 };
 
 struct echo_system
 {
     const char *name;
-    echo__process_func_t process;
-    uint *watched_components;
+    void (*process_begin)(struct echo *echo, void *u_data);
+    void (*process)(struct echo *echo, void *u_data, u32 entity, f32 dt);
+    void (*process_end)(struct echo *echo, void *u_data);
+    u32 *watched_components;
     struct bitset entities;
 };
 
 struct echo_component
 {
     const char *name;
-    size_t size;
-    size_t offset;
+    u32 size;
+    u32 offset;
 };
 
 struct echo
 {
-    int initialized;
+    bool initialized;
 
-    size_t data_width;
-    size_t data_len;
-    size_t data_cap;
+    u32 data_width;
+    u32 data_len;
+    u32 data_cap;
     void *data;
 
     struct sparse_set added_entities;
@@ -50,43 +50,51 @@ struct echo
 
     struct bitset active_entities;
 
-    uint next_entity_id;
+    u32 next_entity_id;
     struct sparse_set free_entities;
 
-    size_t num_components;
+    u32 num_components;
     struct echo_component *components;
 
-    size_t num_systems;
+    u32 num_systems;
     struct echo_system *systems;
 };
 
+// echo
+struct echo *echo_alloc();
 void echo_init(struct echo *echo);
+void echo_process(struct echo *echo, void *u_data, f32 dt);
 
-void echo_process(struct echo *echo, float dt);
+// component
+void echo_create_component(struct echo *echo,
+                           char *name,
+                           u32 size,
+                           u32 *component_ptr);
 
-uint echo_component_create(struct echo *echo, const char *name, size_t size);
+// system
+void echo_create_system(struct echo *echo,
+                        char *name,
+                        void (*process_begin)(struct echo *, void *),
+                        void (*process)(struct echo *, void *, u32, f32),
+                        void (*process_end)(struct echo *, void *),
+                        u32 *system_ptr);
 
-uint echo_system_create(struct echo *echo,
-                        const char *name,
-                        echo__process_func_t process);
+void echo_watch(struct echo *e, u32 system, u32 component);
+void echo_process_system(struct echo *echo, u32 system, void *u_data, f32 dt);
 
-void echo_system_watch_component(struct echo *echo,
-                                 uint system,
-                                 uint component);
+// entity
+void echo_create_entity(struct echo *echo, u32 *entity_ptr);
+void echo_clone_entity(struct echo *echo, u32 entity, u32 *entity_ptr);
+void echo_get_component(struct echo *echo,
+                        u32 entity,
+                        u32 component,
+                        void **component_data_ptr);
 
-void echo_system_process(struct echo *echo, uint system, float dt);
+void echo_set_component(struct echo *echo,
+                        u32 entity,
+                        u32 component,
+                        void *component_data);
 
-uint echo_entity_create(struct echo *echo);
-
-uint echo_entity_clone(struct echo *echo, uint prototype);
-
-void *echo_entity_get_component(struct echo *echo, uint entity, uint component);
-
-void echo_entity_set_component(struct echo *echo,
-                               uint entity,
-                               uint component,
-                               const void *data);
-
-void echo_entity_del_component(struct echo *echo, uint entity, uint component);
-
-void echo_entity_set_state(struct echo *echo, uint entity, uint state);
+void echo_rem_component(struct echo *echo, u32 entity, u32 component);
+void echo_set_state(struct echo *echo, u32 entity, u32 state);
+#endif

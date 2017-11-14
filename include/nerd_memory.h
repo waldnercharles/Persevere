@@ -1,6 +1,5 @@
 #pragma once
 
-#include "nerd.h"
 #include "nerd_math.h"
 
 #ifdef malloc
@@ -18,22 +17,22 @@
 struct mem_allocation
 {
     char *file;
-    int line;
-    size_t size;
+    s32 line;
+    u32 size;
     struct mem_allocation *prev, *next;
 };
 
 static struct mem_allocation *allocation_head;
 
 void *
-mem__malloc(size_t size, char *file, int line)
+mem__malloc(u32 size, char *file, s32 line)
 {
     if (size == 0)
     {
         return NULL;
     }
 
-    struct mem_allocation *alloc = malloc(size + sizeof(*alloc));
+    struct mem_allocation *alloc = malloc(size + sizeof(struct mem_allocation));
     if (alloc == NULL)
     {
         return NULL;
@@ -48,7 +47,7 @@ mem__malloc(size_t size, char *file, int line)
     }
 
     alloc->prev = NULL;
-    alloc->size = (int)size;
+    alloc->size = (s32)size;
 
     allocation_head = alloc;
 
@@ -82,7 +81,7 @@ mem__free(void *ptr)
 }
 
 void *
-mem__realloc(void *ptr, size_t size, char *file, int line)
+mem__realloc(void *ptr, u32 size, char *file, s32 line)
 {
     if (ptr == NULL)
     {
@@ -113,7 +112,7 @@ mem__realloc(void *ptr, size_t size, char *file, int line)
 }
 
 void *
-mem__calloc(size_t num_items, size_t size, char *file, int line)
+mem__calloc(u32 num_items, u32 size, char *file, s32 line)
 {
     if (num_items == 0 || size == 0)
     {
@@ -135,7 +134,7 @@ mem__calloc(size_t num_items, size_t size, char *file, int line)
 }
 
 char *
-mem__strdup(char *str, char *file, int line)
+mem__strdup(char *str, char *file, s32 line)
 {
     char *ptr = mem__malloc(strlen(str) + 1, file, line);
     if (ptr == NULL)
@@ -157,7 +156,7 @@ mem_dump()
             printf("LEAKED: %s (%4d): %8d bytes at %p\n",
                    alloc->file,
                    alloc->line,
-                   (int)alloc->size,
+                   (s32)alloc->size,
                    (void *)(alloc + 1));
         }
     }

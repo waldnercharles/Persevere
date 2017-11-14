@@ -7,9 +7,9 @@ in fragment_data
     vec2 tex;
 } fs_in;
 
-uniform sampler2D u_texture;
+uniform sampler2D sprite_sheet;
 
 void main()
 {
-	fragment_color = texture(u_texture, fs_in.tex) * vec4(fs_in.col, 1.0);
+	fragment_color = texture(sprite_sheet, fs_in.tex);
 }

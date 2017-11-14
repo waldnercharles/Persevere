@@ -1,4 +1,7 @@
 #include "nerd_dynlib.h"
+#include "nerd_file.h"
+#include "nerd_log.h"
+#include "nerd_string.h"
 
 static time_t
 get_last_write_time(char *filename)
@@ -15,10 +18,19 @@ get_last_write_time(char *filename)
 void
 unload_game(struct game_dll *game)
 {
-    printf("Unloading Library\n");
-    SDL_UnloadObject(game->library);
-    game->library = 0;
-    game->game_loop = 0;
+    char *base_path = SDL_GetBasePath();
+    char *lock_path = string_new(base_path);
+    lock_path = string_append_cstring(lock_path, "persevere-core.lock");
+
+    if (!file_exists(lock_path))
+    {
+        log_debug("Unloading Game Dll...");
+        SDL_UnloadObject(game->library);
+        game->library = 0;
+        game->game_loop = 0;
+    }
+
+    string_free(lock_path);
 }
 
 void
@@ -42,14 +54,14 @@ load_game(char *library_name, struct game_dll *game)
     {
         file_copy(library_path, library_temp_path);
 
+        log_debug("Loading Game Dll...");
         game->library = (void *)SDL_LoadObject(library_temp_path);
         if (game->library == NULL)
         {
             err = SDL_GetError();
-            printf("Can't load library: %s\n", err);
+            log_warning("Can't load library: %s\n", err);
             goto cleanup;
         }
-        printf("Loaded Library\n");
 
         game->game_init = SDL_LoadFunction(game->library, "game_init");
         game->game_loop = SDL_LoadFunction(game->library, "game_loop");
@@ -57,14 +69,8 @@ load_game(char *library_name, struct game_dll *game)
         if (game->game_loop == NULL || game->game_init == NULL)
         {
             err = SDL_GetError();
-            printf("Can't load function: %s\n", err);
+            log_warning("Can't load function: %s\n", err);
         }
-
-        printf("Loaded Function!\n");
-    }
-    else
-    {
-        printf("%s exists\n", lock_path);
     }
 
     game->last_write_time = get_last_write_time(library_temp_path);

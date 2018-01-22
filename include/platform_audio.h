@@ -1,7 +1,10 @@
-#ifndef AUDIO_H
-#define AUDIO_H
+#ifndef PLATFORM_AUDIO_H
+#define PLATFORM_AUDIO_H
 #include "std.h"
+#include "engine.h"
+#include "mixer.h"
 
-void audio_init(struct game *game);
+void platform_lock_audio_device(u32 audio_device, bool lock);
+void platform_mixer_event_handler(struct mixer_event *e);
 
 #endif

@@ -33,21 +33,21 @@
 // clang-format on
 
 union vec2
-vec2(f32 x, f32 y)
+vec2(r32 x, r32 y)
 {
     union vec2 v = { x, y };
     return v;
 }
 
 union vec3
-vec3(f32 x, f32 y, f32 z)
+vec3(r32 x, r32 y, r32 z)
 {
     union vec3 v = { x, y, z };
     return v;
 }
 
 union vec4
-vec4(f32 x, f32 y, f32 z, f32 w)
+vec4(r32 x, r32 y, r32 z, r32 w)
 {
     union vec4 v = { x, y, z, w };
     return v;
@@ -88,7 +88,7 @@ vec2_sub(union vec2 a, union vec2 b)
 }
 
 union vec2
-vec2_mul(union vec2 v, f32 n)
+vec2_mul(union vec2 v, r32 n)
 {
     union vec2 r;
     vec2_op_scalar(r, =, v, *, n);
@@ -96,7 +96,7 @@ vec2_mul(union vec2 v, f32 n)
 }
 
 union vec2
-vec2_div(union vec2 v, f32 n)
+vec2_div(union vec2 v, r32 n)
 {
     union vec2 r;
     vec2_op_scalar(r, =, v, /, n);
@@ -120,7 +120,7 @@ vec3_sub(union vec3 a, union vec3 b)
 };
 
 union vec3
-vec3_mul(union vec3 v, f32 n)
+vec3_mul(union vec3 v, r32 n)
 {
     union vec3 r;
     vec3_op_scalar(r, =, v, *, n);
@@ -128,7 +128,7 @@ vec3_mul(union vec3 v, f32 n)
 };
 
 union vec3
-vec3_div(union vec3 v, f32 n)
+vec3_div(union vec3 v, r32 n)
 {
     union vec3 r;
     vec3_op_scalar(r, =, v, /, n);
@@ -152,7 +152,7 @@ vec4_sub(union vec4 a, union vec4 b)
 };
 
 union vec4
-vec4_mul(union vec4 v, f32 n)
+vec4_mul(union vec4 v, r32 n)
 {
     union vec4 r;
     vec4_op_scalar(r, =, v, *, n);
@@ -160,7 +160,7 @@ vec4_mul(union vec4 v, f32 n)
 };
 
 union vec4
-vec4_div(union vec4 v, f32 n)
+vec4_div(union vec4 v, r32 n)
 {
     union vec4 r;
     vec4_op_scalar(r, =, v, /, n);
@@ -189,48 +189,48 @@ vec4_norm(union vec4 v)
     return vec4_div(v, vec4_mag(v));
 }
 
-f32
+r32
 vec2_dot(union vec2 a, union vec2 b)
 {
     return a.x * b.x + a.y * b.y;
 }
 
-f32
+r32
 vec3_dot(union vec3 a, union vec3 b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-f32
+r32
 vec4_dot(union vec4 a, union vec4 b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 }
 
-f32
+r32
 vec2_mag(union vec2 v)
 {
     return sqrtf(vec2_dot(v, v));
 }
 
-f32
+r32
 vec3_mag(union vec3 v)
 {
     return sqrtf(vec3_dot(v, v));
 };
 
-f32
+r32
 vec4_mag(union vec4 v)
 {
     return sqrtf(vec4_dot(v, v));
 };
 
 union vec2
-vec2_rotate(union vec2 v, f32 angle_radians)
+vec2_rotate(union vec2 v, r32 angle_radians)
 {
     union vec2 r;
-    f32 c = cosf(angle_radians);
-    f32 s = sinf(angle_radians);
+    r32 c = cosf(angle_radians);
+    r32 s = sinf(angle_radians);
 
     r.x = v.x * c - v.y * s;
     r.y = v.x * s + v.y * c;
@@ -293,7 +293,7 @@ mat4_zero()
 }
 
 union mat2
-mat2(f32 d)
+mat2(r32 d)
 {
     union mat2 m = mat2_zero();
     m.m[0][0] = d;
@@ -302,7 +302,7 @@ mat2(f32 d)
 }
 
 union mat3
-mat3(f32 d)
+mat3(r32 d)
 {
     union mat3 m = mat3_zero();
     m.m[0][0] = d;
@@ -312,7 +312,7 @@ mat3(f32 d)
 }
 
 union mat4
-mat4(f32 d)
+mat4(r32 d)
 {
     union mat4 m = mat4_zero();
     m.m[0][0] = d;
@@ -401,13 +401,13 @@ mat4_scale(union vec3 v)
 }
 
 union mat4
-mat4_rotate(union vec3 axis, f32 angle_radians)
+mat4_rotate(union vec3 axis, r32 angle_radians)
 {
     union mat4 m = mat4(1.0f);
 
-    f32 s = sinf(angle_radians);
-    f32 c = cosf(angle_radians);
-    f32 n = 1.0f - c;
+    r32 s = sinf(angle_radians);
+    r32 c = cosf(angle_radians);
+    r32 n = 1.0f - c;
 
     axis = vec3_norm(axis);
 
@@ -427,7 +427,7 @@ mat4_rotate(union vec3 axis, f32 angle_radians)
 }
 
 union mat4
-mat4_ortho(f32 left, f32 right, f32 bottom, f32 top, f32 near, f32 far)
+mat4_ortho(r32 left, r32 right, r32 bottom, r32 top, r32 near, r32 far)
 {
     union mat4 m = mat4(1.0f);
 
@@ -443,11 +443,11 @@ mat4_ortho(f32 left, f32 right, f32 bottom, f32 top, f32 near, f32 far)
 }
 
 union mat4
-mat4_perspective(f32 fov_radians, f32 aspect, f32 near, f32 far)
+mat4_perspective(r32 fov_radians, r32 aspect, r32 near, r32 far)
 {
     union mat4 m = mat4_zero();
 
-    f32 tan_half_fov = tanh(fov_radians / 2.0f);
+    r32 tan_half_fov = tanh(fov_radians / 2.0f);
 
     m.m[0][0] = 1.0f / (aspect * tan_half_fov);
     m.m[1][1] = 1.0f / (tan_half_fov);
@@ -458,8 +458,8 @@ mat4_perspective(f32 fov_radians, f32 aspect, f32 near, f32 far)
     return m;
 }
 
-f32
-math_radians(f32 degrees)
+r32
+math_radians(r32 degrees)
 {
     return degrees * (math_pi / 180.0f);
 }

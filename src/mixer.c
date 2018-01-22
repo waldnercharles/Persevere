@@ -8,33 +8,37 @@ struct ogg_stream
 };
 
 static void
-mixer__dummy_handler(struct mixer_event *event)
-{
-    (void)event;
-}
-
-static void
 mixer__lock(struct mixer *mixer)
 {
     struct mixer_event event;
-    event.type = MIXER_EVENT_LOCK;
-    event.udata = &(mixer->audio_device);
-    mixer->lock(&event);
+    mixer->lock(mixer->audio_device, true);
+
+    if (mixer->handle_event != NULL)
+    {
+        event.type = MIXER_EVENT_LOCK;
+        event.udata = &mixer;
+        mixer->handle_event(&event);
+    }
 }
 
 static void
 mixer__unlock(struct mixer *mixer)
 {
     struct mixer_event event;
-    event.type = MIXER_EVENT_UNLOCK;
-    event.udata = &(mixer->audio_device);
-    mixer->lock(&event);
+    mixer->lock(mixer->audio_device, false);
+
+    if (mixer->handle_event != NULL)
+    {
+        event.type = MIXER_EVENT_UNLOCK;
+        event.udata = &mixer;
+        mixer->handle_event(&event);
+    }
 }
 
 static const char *
 mixer__error(struct mixer *mixer, const char *msg)
 {
-    mixer->lasterror = msg;
+    mixer->err = msg;
     return msg;
 }
 
@@ -44,7 +48,7 @@ mixer__rewind_source(struct mixer_source *source)
     struct mixer_event event;
     event.type = MIXER_EVENT_REWIND;
     event.udata = source->udata;
-    source->handler(&event);
+    source->event_handler(&event);
     source->position = 0;
     source->rewind = 0;
     source->end = source->length;
@@ -59,7 +63,7 @@ mixer__fill_source_buffer(struct mixer_source *source, s32 offset, u32 length)
     event.udata = source->udata;
     event.buffer = source->buffer + offset;
     event.length = length;
-    source->handler(&event);
+    source->event_handler(&event);
 }
 
 static void
@@ -192,9 +196,9 @@ mixer__check_header(void *data, s32 size, const char *str, s32 offset)
 static void
 mixer__recalculate_source_gain(struct mixer_source *s)
 {
-    f64 pan = s->pan;
-    f64 left = s->gain * (pan <= 0.0 ? 1.0 : 1.0 - pan);
-    f64 right = s->gain * (pan >= 0.0 ? 1.0 : 1.0 + pan);
+    r64 pan = s->pan;
+    r64 left = s->gain * (pan <= 0.0 ? 1.0 : 1.0 - pan);
+    r64 right = s->gain * (pan >= 0.0 ? 1.0 : 1.0 + pan);
     s->lgain = FX_FROM_FLOAT(left);
     s->rgain = FX_FROM_FLOAT(right);
 }
@@ -247,6 +251,7 @@ mixer__ogg_handler(struct mixer_event *event)
 
 static const char *
 mixer__ogg_init(struct mixer *mixer,
+                struct allocator *allocator,
                 struct mixer_source_info *info,
                 void *data,
                 s32 length,
@@ -255,15 +260,19 @@ mixer__ogg_init(struct mixer *mixer,
     s32 err;
     stb_vorbis *ogg;
     struct ogg_stream *stream;
+    stb_vorbis_alloc vorbis_alloc;
 
-    ogg = stb_vorbis_open_memory(data, length, &err, NULL);
+    vorbis_alloc.alloc_buffer = alloc(allocator, 300 * 1024);
+    vorbis_alloc.alloc_buffer_length_in_bytes = 300 * 1024;
+
+    ogg = stb_vorbis_open_memory(data, length, &err, &vorbis_alloc);
 
     if (!ogg)
     {
         return mixer__error(mixer, "invalid ogg data");
     }
 
-    stream = calloc(1, sizeof(*stream));
+    stream = alloc(allocator, sizeof(struct ogg_stream));
     if (!stream)
     {
         stb_vorbis_close(ogg);
@@ -279,7 +288,7 @@ mixer__ogg_init(struct mixer *mixer,
     stb_vorbis_info ogginfo = stb_vorbis_get_info(ogg);
 
     info->udata = stream;
-    info->handler = mixer__ogg_handler;
+    info->event_handler = mixer__ogg_handler;
     info->samplerate = ogginfo.sample_rate;
     info->length = stb_vorbis_stream_length_in_samples(ogg);
 
@@ -289,6 +298,7 @@ mixer__ogg_init(struct mixer *mixer,
 
 static struct mixer_source *
 mixer__new_source_from_mem(struct mixer *mixer,
+                           struct allocator *allocator,
                            void *data,
                            s32 size,
                            bool ownsdata)
@@ -298,12 +308,12 @@ mixer__new_source_from_mem(struct mixer *mixer,
 
     if (mixer__check_header(data, size, "OggS", 0))
     {
-        err = mixer__ogg_init(mixer, &info, data, size, ownsdata);
+        err = mixer__ogg_init(mixer, allocator, &info, data, size, ownsdata);
         if (err)
         {
             return NULL;
         }
-        return mixer_new_source(mixer, &info);
+        return mixer_new_source(mixer, allocator, &info);
     }
 
     mixer__error(mixer, "unknown format or invalid data");
@@ -313,37 +323,42 @@ mixer__new_source_from_mem(struct mixer *mixer,
 const char *
 mixer_get_error(struct mixer *mixer)
 {
-    const char *res = mixer->lasterror;
-    mixer->lasterror = NULL;
+    const char *res = mixer->err;
+    mixer->err = NULL;
     return res;
 }
 
-struct mixer *
-mixer_new()
-{
-    struct mixer *m = malloc(sizeof(struct mixer));
-    memset(m, 0, sizeof(struct mixer));
-    return m;
-}
-
 void
-mixer_init(struct mixer *mixer, s32 samplerate)
+mixer_init(struct mixer *mixer, void (*lock)(u32 device, bool lock))
 {
-    mixer->lasterror = NULL;
-    mixer->samplerate = samplerate;
-    mixer->lock = mixer__dummy_handler;
+    mixer->err = NULL;
     mixer->sources = NULL;
     mixer->gain = FX_UNIT;
-}
 
-void
-mixer_set_lock(struct mixer *mixer, mixer_event_handler lock)
-{
     mixer->lock = lock;
 }
 
 void
-mixer_set_master_gain(struct mixer *mixer, f64 gain)
+mixer_set_event_handler(struct mixer *mixer,
+                        void (*handle_event)(struct mixer_event *event))
+{
+    mixer->handle_event = handle_event;
+}
+
+void
+mixer_set_master_audio_device(struct mixer *mixer, u32 audio_device)
+{
+    mixer->audio_device = audio_device;
+}
+
+void
+mixer_set_master_samplerate(struct mixer *mixer, s32 samplerate)
+{
+    mixer->samplerate = samplerate;
+}
+
+void
+mixer_set_master_gain(struct mixer *mixer, r64 gain)
 {
     mixer->gain = FX_FROM_FLOAT(gain);
 }
@@ -394,16 +409,18 @@ mixer_process(struct mixer *mixer, s16 *dest, s32 length)
 }
 
 struct mixer_source *
-mixer_new_source(struct mixer *mixer, const struct mixer_source_info *info)
+mixer_new_source(struct mixer *mixer,
+                 struct allocator *allocator,
+                 const struct mixer_source_info *info)
 {
-    struct mixer_source *source = calloc(1, sizeof(*source));
+    struct mixer_source *source = alloc(allocator, sizeof(struct mixer_source));
     if (!source)
     {
         mixer__error(mixer, "allocation failed");
         return NULL;
     }
 
-    source->handler = info->handler;
+    source->event_handler = info->event_handler;
     source->length = info->length;
     source->samplerate = info->samplerate;
     source->udata = info->udata;
@@ -418,20 +435,24 @@ mixer_new_source(struct mixer *mixer, const struct mixer_source_info *info)
 }
 
 struct mixer_source *
-mixer_new_source_from_file(struct mixer *mixer, const char *filename)
+mixer_new_source_from_file(struct mixer *mixer,
+                           struct allocator *allocator,
+                           const char *filename)
 {
     struct mixer_source *source;
-    u32 len;
-    void *data = file_load(filename, &len);  // Load file into memory
 
+    u32 len;
+    void *data;
+
+    data = file_load(allocator, filename, &len);
     if (!data)
     {
-        mixer__error(mixer, "could not load file");
+        mixer__error(mixer, "Could not load file.");
         return NULL;
     }
 
     /* Try to load and return */
-    source = mixer__new_source_from_mem(mixer, data, len, 1);
+    source = mixer__new_source_from_mem(mixer, allocator, data, len, 1);
     if (!source)
     {
         free(data);
@@ -442,9 +463,12 @@ mixer_new_source_from_file(struct mixer *mixer, const char *filename)
 }
 
 struct mixer_source *
-mixer_new_source_from_mem(struct mixer *mixer, void *data, s32 size)
+mixer_new_source_from_mem(struct mixer *mixer,
+                          struct allocator *allocator,
+                          void *data,
+                          s32 size)
 {
-    return mixer__new_source_from_mem(mixer, data, size, 0);
+    return mixer__new_source_from_mem(mixer, allocator, data, size, 0);
 }
 
 void
@@ -470,20 +494,20 @@ mixer_destroy_source(struct mixer *mixer, struct mixer_source *source)
     mixer__unlock(mixer);
     event.type = MIXER_EVENT_DESTROY;
     event.udata = source->udata;
-    source->handler(&event);
+    source->event_handler(&event);
     free(source);
 }
 
-f64
+r64
 mixer_get_length(struct mixer_source *source)
 {
-    return source->length / (f64)source->samplerate;
+    return source->length / (r64)source->samplerate;
 }
 
-f64
+r64
 mixer_get_position(struct mixer_source *s)
 {
-    return ((s->position >> FX_BITS) % s->length) / (f64)s->samplerate;
+    return ((s->position >> FX_BITS) % s->length) / (r64)s->samplerate;
 }
 
 s32
@@ -493,26 +517,26 @@ mixer_get_state(struct mixer_source *source)
 }
 
 void
-mixer_set_gain(struct mixer_source *source, f64 gain)
+mixer_set_gain(struct mixer_source *source, r64 gain)
 {
     source->gain = gain;
     mixer__recalculate_source_gain(source);
 }
 
 void
-mixer_set_pan(struct mixer_source *source, f64 pan)
+mixer_set_pan(struct mixer_source *source, r64 pan)
 {
     source->pan = math_clamp(pan, -1.0, 1.0);
     mixer__recalculate_source_gain(source);
 }
 
 void
-mixer_set_pitch(struct mixer *mixer, struct mixer_source *source, f64 pitch)
+mixer_set_pitch(struct mixer *mixer, struct mixer_source *source, r64 pitch)
 {
-    f64 rate = 0.001;
+    r64 rate = 0.001;
     if (pitch > 0)
     {
-        rate = source->samplerate / (f64)mixer->samplerate * pitch;
+        rate = source->samplerate / (r64)mixer->samplerate * pitch;
     }
 
     source->rate = FX_FROM_FLOAT(rate);

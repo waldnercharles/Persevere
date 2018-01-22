@@ -1,19 +1,21 @@
 #include "assets/texture_asset.h"
+#include "engine.h"
 #include "renderer.h"
 #include "stb_image.h"
 
 void *
 asset_load_texture(const char *filename, void *udata)
 {
+    struct engine *engine;
     struct renderer_texture *texture;
 
     u8 *texture_data;
     u32 format;
 
-    texture = malloc(sizeof(struct renderer_texture));
+    engine = udata;
 
-    unused(udata);
-
+    texture = alloc(engine->platform->memory->permanent,
+                    sizeof(struct renderer_texture));
     texture->filename = filename;
 
     glGenTextures(1, &texture->id);

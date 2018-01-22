@@ -1,3 +1,4 @@
+#include "std.h"
 #include "engine.h"
 #include "array.h"
 #include "vec.h"
@@ -11,18 +12,19 @@
 void
 render_system_process_begin(struct ecs *ecs, void *u_data)
 {
-    struct game *game;
+    struct engine *engine;
     unused(ecs);
 
-    game = u_data;
-    array__len(game->renderer->sprites) = 0;
-    array__len(game->renderer->states) = 0;
+    engine = u_data;
+    array__len(engine->renderer->sprites) = 0;
+    array__len(engine->renderer->states) = 0;
 }
 
 void
-render_system_process(struct ecs *ecs, void *u_data, u32 entity, f32 dt)
+render_system_process(struct ecs *ecs, void *u_data, u32 entity, r32 dt)
 {
-    struct game *game;
+    u32 body_component, render_component;
+    struct engine *engine;
     struct body *body;
     struct render *render;
 
@@ -30,7 +32,9 @@ render_system_process(struct ecs *ecs, void *u_data, u32 entity, f32 dt)
     struct renderer_state state;
     unused(dt);
 
-    game = u_data;
+    engine = u_data;
+    body_component = engine->component_handles.body;
+    render_component = engine->component_handles.render;
 
     ecs_get_component(ecs, entity, body_component, (void **)&body);
     ecs_get_component(ecs, entity, render_component, (void **)&render);
@@ -43,22 +47,27 @@ render_system_process(struct ecs *ecs, void *u_data, u32 entity, f32 dt)
     state.shader = render->shader;
     state.texture = render->texture;
 
-    array_push(game->renderer->sprites, sprite);
-    array_push(game->renderer->states, state);
+    array_push(engine->renderer->sprites, sprite);
+    array_push(engine->renderer->states, state);
 }
 
 void
 render_system_process_end(struct ecs *ecs, void *u_data)
 {
     static u32 *temp = NULL;
-    struct game *game;
+    struct engine *engine;
     u32 len, i;
 
-    game = u_data;
+    if (temp == NULL)
+    {
+        array_init(temp, ecs->allocator);
+    }
 
-    renderer_render(game->renderer);
+    engine = u_data;
 
-    len = array_count(game->renderer->sprites);
+    renderer_render(engine->renderer);
+
+    len = array_count(engine->renderer->sprites);
 
     array_set_cap(temp, len);
     for (i = 0; i < len; ++i)

@@ -1,9 +1,10 @@
 #ifndef DYNLIB_H
 #define DYNLIB_H
 #include "std.h"
+#include "engine.h"
 
-typedef void game_init_func(void *game_state);
-typedef void game_loop_func(void *game_state, f32 dt);
+typedef void game_init_func(struct engine *engine);
+typedef void game_loop_func(struct engine *engine, r32 dt);
 
 struct game_dll
 {

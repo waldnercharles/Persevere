@@ -1,6 +1,7 @@
 #ifndef MAP_H
 #define MAP_H
 #include "std.h"
+#include "allocators/allocator.h"
 
 struct map_node
 {
@@ -12,12 +13,13 @@ struct map_node
 
 struct map
 {
+    struct allocator *allocator;
     u32 count;
     u32 capacity;
     struct map_node **buckets;
 };
 
-struct map *map_alloc(u32 capacity);
+struct map *map_alloc(struct allocator *allocator, u32 capacity);
 void map_free(struct map *m);
 
 bool map_contains(struct map *m, char *key);

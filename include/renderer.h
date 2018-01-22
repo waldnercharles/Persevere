@@ -2,12 +2,13 @@
 #define RENDERER_H
 #include "std.h"
 #include "vec.h"
+#include "allocators/allocator.h"
 
 struct renderer_sprite
 {
     union vec2 pos;
     union vec2 size;
-    f32 theta;
+    r32 theta;
     union vec2 uv;
 };
 
@@ -15,12 +16,6 @@ struct renderer_state
 {
     u32 texture;
     u32 shader;
-};
-
-struct renderer_group
-{
-    struct renderer_state state;
-    struct renderer_sprite *sprites;
 };
 
 struct renderer_texture
@@ -41,7 +36,6 @@ struct renderer_spritesheet
 
 struct renderer
 {
-    struct renderer_group *groups;
     struct renderer_sprite *sprites;
     struct renderer_state *states;
 
@@ -49,8 +43,7 @@ struct renderer
     u32 vbo[2];  // 0 = Quad, 1 = Sprites
 };
 
-struct renderer *renderer_new();
-void renderer_init(struct renderer *renderer);
+void renderer_init(struct renderer *renderer, struct allocator *allocator);
 void renderer_render(struct renderer *renderer);
 
 void renderer_create_texture(struct renderer *renderer,

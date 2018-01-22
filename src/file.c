@@ -12,10 +12,14 @@
 #endif
 
 #include "file.h"
+#include "log.h"
 #include "vec.h"
 
 static void *
-file__load(const char *filename, u32 *length, u32 additional_length)
+file__load(struct allocator *allocator,
+           const char *filename,
+           u32 *length,
+           u32 additional_length)
 {
     void *buf;
     u32 len, read_len;
@@ -23,14 +27,17 @@ file__load(const char *filename, u32 *length, u32 additional_length)
 
     if (f == NULL)
     {
+        log_error("Failed to load %s.", filename);
         return NULL;
     }
 
     len = file_length(f);
-    buf = malloc(len + additional_length);
+    buf = alloc(allocator, len + additional_length);
     if (buf == NULL)
     {
         fclose(f);
+        log_error("Failed to allocate buffer of size %i",
+                  len + additional_length);
         return NULL;
     }
 
@@ -46,7 +53,10 @@ file__load(const char *filename, u32 *length, u32 additional_length)
     }
     else
     {
-        free(buf);
+        log_warning("Buffer read mismatch. %i out of %i bytes read.",
+                    read_len,
+                    len);
+        // free(buf);
         return NULL;
     }
 
@@ -106,11 +116,13 @@ file_compare(const char *filename1, const char *filename2)
     {
         if (f1 != NULL)
         {
+            log_debug("Failed to open file %s.", filename1);
             fclose(f1);
             return 1;
         }
         if (f2 != NULL)
         {
+            log_debug("Failed to open file %s.", filename2);
             fclose(f2);
             return -1;
         }
@@ -130,10 +142,12 @@ file_equals(const char *filename1, const char *filename2)
     {
         if (f1 != NULL)
         {
+            log_debug("Failed to open file %s.", filename1);
             fclose(f1);
         }
         if (f2 != NULL)
         {
+            log_debug("Failed to open file %s.", filename2);
             fclose(f2);
         }
         return f1 == f2;
@@ -162,10 +176,12 @@ file_copy(const char *from, const char *to)
     {
         if (f1 != NULL)
         {
+            log_debug("Failed to open file %s.", from);
             fclose(f1);
         }
         if (f2 != NULL)
         {
+            log_debug("Failed to open file %s.", to);
             fclose(f2);
         }
         return;
@@ -187,19 +203,30 @@ file_exists(const char *filename)
 }
 
 char *
-file_load_cstr(const char *filename, u32 *length)
+file_load_cstr(struct allocator *allocator, const char *filename, u32 *length)
 {
     char *buf;
     u32 len = 0;
 
     if (length)
     {
-        buf = file__load(filename, length, 1);
+        buf = file__load(allocator, filename, length, 1);
+
+        if (buf == NULL)
+        {
+            log_error("Failed to load %s.", filename);
+        }
+
         buf[*length] = 0;
     }
     else
     {
-        buf = file__load(filename, &len, 1);
+        buf = file__load(allocator, filename, &len, 1);
+        if (buf == NULL)
+        {
+            log_error("Failed to load %s.", filename);
+        }
+
         buf[len] = 0;
     }
 
@@ -207,7 +234,14 @@ file_load_cstr(const char *filename, u32 *length)
 }
 
 void *
-file_load(const char *filename, u32 *length)
+file_load(struct allocator *allocator, const char *filename, u32 *length)
 {
-    return file__load(filename, length, 0);
+    return file__load(allocator, filename, length, 0);
+}
+
+time_t
+file_write_time(char *filename)
+{
+    struct stat buf;
+    return stat(filename, &buf) == 0 ? buf.st_mtime : 0;
 }

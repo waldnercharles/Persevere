@@ -8,18 +8,13 @@
 #include "str.h"
 #include "log.h"
 
-struct asset_manager *
-asset_new()
-{
-    struct asset_manager *am = malloc(sizeof(struct asset_manager));
-    return am;
-}
-
 void
-asset_init(struct asset_manager *am)
+asset_init(struct asset_manager *am, struct allocator *allocator)
 {
-    am->map = map_alloc(64);
-    am->handlers = NULL;
+    am->allocator = allocator;
+    am->map = map_alloc(allocator, 64);
+
+    array_init(am->handlers, allocator);
 }
 
 void
@@ -98,10 +93,8 @@ asset_add_handler(struct asset_manager *am,
                   void *user_data)
 {
     struct asset_handler h;
-    char *tmp = malloc(strlen(ext) + 1);
-    strcpy(tmp, ext);
 
-    h.extension = tmp;
+    h.extension = ext;
     h.load_asset = load_func;
     h.unload_asset = unload_func;
     h.user_data = user_data;

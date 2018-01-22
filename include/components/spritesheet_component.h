@@ -1,4 +1,6 @@
-#pragma once
+#ifndef SPRITESHEET_COMPONENT_H
+#define SPRITESHEET_COMPONENT_H
+
 #include "std.h"
 
 struct texture
@@ -16,7 +18,4 @@ struct spritesheet
     u32 tile_height;
 };
 
-struct spritesheet_ptr
-{
-};
-u32 spritesheet_component;
+#endif

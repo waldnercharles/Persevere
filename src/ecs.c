@@ -1,5 +1,6 @@
 #include "ecs.h"
 #include "array.h"
+#include "log.h"
 
 static void *
 ecs__entity_get_data(struct ecs *ecs, u32 entity)
@@ -36,14 +37,6 @@ ecs__check(struct ecs *ecs, struct ecs_system *system, u32 entity)
     ecs__subscribe(system, entity);
 }
 
-struct ecs *
-ecs_alloc()
-{
-    struct ecs *ecs = malloc(sizeof(struct ecs));
-    memset(ecs, 0, sizeof(struct ecs));
-    return ecs;
-}
-
 void
 ecs_init(struct ecs *ecs)
 {
@@ -56,14 +49,20 @@ ecs_init(struct ecs *ecs)
         component->offset += component_bytes;
     }
 
+    ecs->data = array__init(ecs->allocator, 0, ecs->data_width);
     ecs->initialized = 1;
 }
 
 void
-ecs_process(struct ecs *ecs, void *u_data, f32 dt)
+ecs_process(struct ecs *ecs, void *u_data, r32 dt)
 {
     u32 entity, i, j;
     struct ecs_system *system;
+
+    if (!ecs->initialized)
+    {
+        log_error("Entity component system not initialized.");
+    }
 
     // TODO: Handle added event
     sparse_set_clear(&ecs->added_entities);
@@ -130,17 +129,22 @@ ecs_process(struct ecs *ecs, void *u_data, f32 dt)
 
 // component
 void
-ecs_create_component(struct ecs *e, char *name, u32 size, u32 *component_ptr)
+ecs_create_component(struct ecs *ecs, char *name, u32 size, u32 *component_ptr)
 {
     struct ecs_component c;
     c.name = name;
     c.size = size;
-    c.offset = e->data_width;
+    c.offset = ecs->data_width;
 
-    e->data_width += size;
+    ecs->data_width += size;
 
-    array_push(e->components, c);
-    *component_ptr = ++(e->num_components) - 1;
+    if (ecs->components == NULL)
+    {
+        array_init(ecs->components, ecs->allocator);
+    }
+
+    array_push(ecs->components, c);
+    *component_ptr = ++(ecs->num_components) - 1;
 }
 
 // system
@@ -148,7 +152,7 @@ void
 ecs_create_system(struct ecs *ecs,
                   char *name,
                   void (*process_begin)(struct ecs *, void *),
-                  void (*process)(struct ecs *, void *, u32, f32),
+                  void (*process)(struct ecs *, void *, u32, r32),
                   void (*process_end)(struct ecs *, void *),
                   u32 *system_ptr)
 {
@@ -162,7 +166,12 @@ ecs_create_system(struct ecs *ecs,
     s.process_begin = process_begin;
     s.process_end = process_end;
 
-    s.watched_components = NULL;
+    array_init(s.watched_components, ecs->allocator);
+
+    if (ecs->systems == NULL)
+    {
+        array_init(ecs->systems, ecs->allocator);
+    }
 
     array_push(ecs->systems, s);
     *system_ptr = ++(ecs->num_systems) - 1;
@@ -175,7 +184,7 @@ ecs_watch(struct ecs *ecs, u32 system, u32 component)
 }
 
 void
-ecs_process_system(struct ecs *ecs, u32 system, void *u_data, f32 dt)
+ecs_process_system(struct ecs *ecs, u32 system, void *u_data, r32 dt)
 {
     struct ecs_system *s = &ecs->systems[system];
     u32 entity;
@@ -194,7 +203,12 @@ ecs_create_entity(struct ecs *ecs, u32 *entity_ptr)
                  ? ecs->next_entity_id++
                  : sparse_set_pop(&ecs->free_entities);
 
-    array_set_cap_sz(ecs->data, ecs->next_entity_id, ecs->data_width);
+    u32 cap = array__cap(ecs->data);
+
+    if (cap < ecs->next_entity_id)
+    {
+        array__grow(ecs->data, ecs->next_entity_id - cap);
+    }
 
     *entity_ptr = id;
 }
@@ -206,13 +220,13 @@ ecs_clone_entity(struct ecs *ecs, u32 entity, u32 *entity_ptr)
     // TODO
 }
 void
-ecs_get_component(struct ecs *e,
+ecs_get_component(struct ecs *ecs,
                   u32 entity,
                   u32 component,
                   void **component_data_ptr)
 {
-    u8 *entity_data = ecs__entity_get_data(e, entity);
-    struct ecs_component *component_info = &(e->components[component]);
+    u8 *entity_data = ecs__entity_get_data(ecs, entity);
+    struct ecs_component *component_info = &(ecs->components[component]);
 
     // Component not found
     if (!bitset_test(entity_data, component))
@@ -224,13 +238,13 @@ ecs_get_component(struct ecs *e,
 }
 
 void
-ecs_set_component(struct ecs *e,
+ecs_set_component(struct ecs *ecs,
                   u32 entity,
                   u32 component,
                   void *component_data)
 {
-    u8 *entity_data = ecs__entity_get_data(e, entity);
-    struct ecs_component *component_info = &(e->components[component]);
+    u8 *entity_data = ecs__entity_get_data(ecs, entity);
+    struct ecs_component *component_info = &(ecs->components[component]);
 
     bitset_set(entity_data, component);
 
@@ -240,38 +254,38 @@ ecs_set_component(struct ecs *e,
 }
 
 void
-ecs_rem_component(struct ecs *e, u32 entity, u32 component)
+ecs_rem_component(struct ecs *ecs, u32 entity, u32 component)
 {
-    u8 *entity_data = ecs__entity_get_data(e, entity);
+    u8 *entity_data = ecs__entity_get_data(ecs, entity);
     bitset_clear(entity_data, component);
 }
 
 void
-ecs_set_state(struct ecs *e, u32 entity, enum ecs_state state)
+ecs_set_state(struct ecs *ecs, u32 entity, enum ecs_state state)
 {
     switch (state)
     {
         case ECS_STATE_ADDED:
-            sparse_set_insert(&e->added_entities, entity);
-            sparse_set_insert(&e->enabled_entities, entity);
-            sparse_set_delete(&e->disabled_entities, entity);
-            sparse_set_delete(&e->deleted_entities, entity);
+            sparse_set_insert(&ecs->added_entities, entity);
+            sparse_set_insert(&ecs->enabled_entities, entity);
+            sparse_set_delete(&ecs->disabled_entities, entity);
+            sparse_set_delete(&ecs->deleted_entities, entity);
             break;
         case ECS_STATE_ENABLED:
-            sparse_set_insert(&e->enabled_entities, entity);
-            sparse_set_delete(&e->disabled_entities, entity);
-            sparse_set_delete(&e->deleted_entities, entity);
+            sparse_set_insert(&ecs->enabled_entities, entity);
+            sparse_set_delete(&ecs->disabled_entities, entity);
+            sparse_set_delete(&ecs->deleted_entities, entity);
             break;
         case ECS_STATE_DISABLED:
-            sparse_set_delete(&e->enabled_entities, entity);
-            sparse_set_insert(&e->disabled_entities, entity);
-            sparse_set_delete(&e->deleted_entities, entity);
+            sparse_set_delete(&ecs->enabled_entities, entity);
+            sparse_set_insert(&ecs->disabled_entities, entity);
+            sparse_set_delete(&ecs->deleted_entities, entity);
             break;
         case ECS_STATE_DELETED:
-            sparse_set_delete(&e->added_entities, entity);
-            sparse_set_delete(&e->enabled_entities, entity);
-            sparse_set_insert(&e->disabled_entities, entity);
-            sparse_set_insert(&e->deleted_entities, entity);
+            sparse_set_delete(&ecs->added_entities, entity);
+            sparse_set_delete(&ecs->enabled_entities, entity);
+            sparse_set_insert(&ecs->disabled_entities, entity);
+            sparse_set_insert(&ecs->deleted_entities, entity);
             break;
     }
 }

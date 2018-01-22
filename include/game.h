@@ -1,9 +1,9 @@
 #ifndef GAME_CORE_H
 #define GAME_CORE_H
 #include "std.h"
+#include "engine.h"
 
-struct game;
+void game_start(struct engine *engine);
+void game_loop(struct engine *engine, r32 dt);
 
-void game_init(struct game *game);
-void game_loop(struct game *game, f32 dt);
 #endif

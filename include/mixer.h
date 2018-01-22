@@ -1,6 +1,7 @@
 #ifndef MIXER_H
 #define MIXER_H
 #include "std.h"
+#include "allocators/allocator.h"
 
 #define MIXER_BUFFER_SIZE (512)
 #define MIXER_BUFFER_MASK (MIXER_BUFFER_SIZE - 1)
@@ -10,15 +11,13 @@ struct mixer_event
     s32 type;
     void *udata;
     const char *msg;
-    short *buffer;
+    s16 *buffer;
     s32 length;
 };
 
-typedef void (*mixer_event_handler)(struct mixer_event *e);
-
 struct mixer_source_info
 {
-    mixer_event_handler handler;
+    void (*event_handler)(struct mixer_event *event);
     void *udata;
     s32 samplerate;
     s32 length;
@@ -28,7 +27,7 @@ struct mixer_source
 {
     struct mixer_source *next;       /* Next source in list */
     short buffer[MIXER_BUFFER_SIZE]; /* Internal buffer with raw stereo PCM */
-    mixer_event_handler handler;     /* Event handler */
+    void (*event_handler)(struct mixer_event *event);
 
     void *udata;      /* Stream's udata (from Mixer_SourceInfo) */
     s32 samplerate;   /* Stream's native samplerate */
@@ -42,8 +41,8 @@ struct mixer_source
     bool loop;        /* Whether the source will loop when `end` is reached */
     bool rewind;      /* Whether the source will rewind before playing */
     bool active;      /* Whether the source is part of `sources` list */
-    f64 gain;         /* Gain set by `mixer_set_gain()` */
-    f64 pan;          /* Pan set by `mixer_set_pan()` */
+    r64 gain;         /* Gain set by `mixer_set_gain()` */
+    r64 pan;          /* Pan set by `mixer_set_pan()` */
 };
 
 enum
@@ -64,43 +63,51 @@ enum
 
 struct mixer
 {
-    struct mixer_source *sources;  /* Linked list of active (playing) sources */
-    u32 audio_device;              /* Audio device passed to lock/unlock */
-    mixer_event_handler lock;      /* Event handler for lock/unlock events */
-    s32 buffer[MIXER_BUFFER_SIZE]; /* Internal master buffer */
-    const char *lasterror;         /* Last error message */
-    s32 samplerate;                /* Master samplerate */
-    s32 gain;                      /* Master gain (fixed point) */
+    struct mixer_source *sources;
+    u32 audio_device;
+    s32 buffer[MIXER_BUFFER_SIZE];
+    s32 samplerate;
+    s32 gain;
+    void (*lock)(u32 audio_device, bool lock);
+    void (*handle_event)(struct mixer_event *event);
+    const char *err;
 };
 
 const char *mixer_get_error(struct mixer *mixer);
 
-struct mixer *mixer_new();
-void mixer_init(struct mixer *mixer, s32 samplerate);
-void mixer_set_lock(struct mixer *mixer, mixer_event_handler lock);
-void mixer_set_master_gain(struct mixer *mixer, f64 gain);
+void mixer_init(struct mixer *mixer, void (*lock)(u32 audio_device, bool lock));
+
+void mixer_set_event_handler(struct mixer *mixer,
+                             void (*handle_event)(struct mixer_event *event));
+
+void mixer_set_master_audio_device(struct mixer *mixer, u32 audio_device);
+void mixer_set_master_samplerate(struct mixer *mixer, s32 samplerate);
+void mixer_set_master_gain(struct mixer *mixer, r64 gain);
 void mixer_process(struct mixer *mixer, short *destination, s32 length);
 
 struct mixer_source *mixer_new_source(struct mixer *mixer,
+                                      struct allocator *allocator,
                                       const struct mixer_source_info *info);
 
 struct mixer_source *mixer_new_source_from_file(struct mixer *mixer,
+                                                struct allocator *allocator,
                                                 const char *filename);
 
 struct mixer_source *mixer_new_source_from_mem(struct mixer *mixer,
+                                               struct allocator *allocator,
                                                void *data,
                                                s32 size);
 
 void mixer_destroy_source(struct mixer *mixer, struct mixer_source *source);
-f64 mixer_get_length(struct mixer_source *source);
-f64 mixer_get_position(struct mixer_source *source);
+r64 mixer_get_length(struct mixer_source *source);
+r64 mixer_get_position(struct mixer_source *source);
 s32 mixer_get_state(struct mixer_source *source);
-void mixer_set_gain(struct mixer_source *source, f64 gain);
-void mixer_set_pan(struct mixer_source *source, f64 pan);
+void mixer_set_gain(struct mixer_source *source, r64 gain);
+void mixer_set_pan(struct mixer_source *source, r64 pan);
 
 void mixer_set_pitch(struct mixer *mixer,
                      struct mixer_source *source,
-                     f64 pitch);
+                     r64 pitch);
 
 void mixer_set_loop(struct mixer_source *source, bool loop);
 void mixer_play(struct mixer *mixer, struct mixer_source *source);

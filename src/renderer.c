@@ -4,30 +4,18 @@
 
 #include "stb_image.h"
 
-struct renderer *
-renderer_new()
-{
-    struct renderer *r = malloc(sizeof(struct renderer));
-    memset(r, 0, sizeof(struct renderer));
-    return r;
-}
-
 void
-renderer_init(struct renderer *renderer)
+renderer_init(struct renderer *renderer, struct allocator *allocator)
 {
-    f32 quad[] = {
+    r32 quad[] = {
         0.0f, 1.0f,  // bottom left
         0.0f, 0.0f,  // top left
         1.0f, 1.0f,  // bottom right
         1.0f, 0.0f,  // top right
     };
 
-    renderer->sprites = NULL;
-    renderer->states = NULL;
-
-    array_init(renderer->sprites);
-    array_init(renderer->states);
-    // renderer->bg_color = vec3(0, 0, 0);
+    array_init(renderer->sprites, allocator);
+    array_init(renderer->states, allocator);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -47,7 +35,7 @@ renderer_init(struct renderer *renderer)
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 2, GL_FLOAT, 0, 2 * sizeof(f32), (void *)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, 0, 2 * sizeof(r32), (void *)0);
     glEnableVertexAttribArray(0);
 
     // Sprite Buffer
@@ -122,4 +110,3 @@ renderer_render(struct renderer *renderer)
 
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, len);
 }
-

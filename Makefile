@@ -1,5 +1,5 @@
 CC          = gcc
-CFLAGS      = -O0 -g -Werror -Wall -Wextra -Wfloat-equal -Wundef -Wshadow -Wpointer-arith -std=c99 -Wno-missing-braces -Wno-implicit-fallthrough -Wno-maybe-uninitialized
+CFLAGS      = -O0 -g -ggdb -Werror -Wall -Wextra -Wfloat-equal -Wundef -Wshadow -Wpointer-arith -std=c99 -Wno-missing-braces -Wno-implicit-fallthrough -Wno-maybe-uninitialized
 
 ROOT        = c:/msys64/mingw32
 PRJ         = persevere
@@ -25,9 +25,9 @@ game: $(SRC)/game.c
 	@echo "Building Game...Done"
 	@$(RM) $(BIN)/$(PRJ)-core.lock
 
-platform: $(SRC)/platform.c
+platform: $(SRC)/platform_sdl.c
 	@echo "Building Platform..."
-	@$(CC) $(CFLAGS) $(SYS_INCLUDE) $(SRC)/platform.c -o $(BIN)/$(PRJ).exe -lSDL2 -lSDL2main -lopengl32 -lglew32
+	@$(CC) $(CFLAGS) $(SYS_INCLUDE) $(SRC)/platform_sdl.c -o $(BIN)/$(PRJ).exe -lSDL2 -lSDL2main -lopengl32 -lglew32
 	@echo "Building Platform...Done."
 
 assets:

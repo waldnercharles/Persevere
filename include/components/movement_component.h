@@ -1,10 +1,13 @@
-#pragma once
+#ifndef MOVEMENT_COMPONENT_H
+#define MOVEMENT_COMPONENT_H
+
 #include "std.h"
 #include "vec.h"
 
 struct movement
 {
     union vec2 vel;
-    f32 angular_vel;
+    r32 angular_vel;
 };
-u32 movement_component;
+
+#endif

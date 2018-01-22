@@ -4,14 +4,18 @@
 #include "components/movement_component.h"
 
 void
-movement_system_process(struct ecs *ecs, void *u_data, u32 entity, f32 dt)
+movement_system_process(struct ecs *ecs, void *u_data, u32 entity, r32 dt)
 {
-    (void)u_data;
+    struct engine *engine;
+    struct component_handles components;
     struct movement *movement;
     struct body *body;
 
-    ecs_get_component(ecs, entity, body_component, (void **)&body);
-    ecs_get_component(ecs, entity, movement_component, (void **)&movement);
+    engine = u_data;
+    components = engine->component_handles;
+
+    ecs_get_component(ecs, entity, components.body, (void **)&body);
+    ecs_get_component(ecs, entity, components.movement, (void **)&movement);
 
     body->pos.x += movement->vel.x * dt;
     body->pos.y += movement->vel.y * dt;

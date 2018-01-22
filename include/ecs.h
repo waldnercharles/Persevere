@@ -5,6 +5,8 @@
 #include "bitset.h"
 #include "sparse_set.h"
 
+#include "allocators/allocator.h"
+
 struct ecs;
 
 typedef void(*ecs__process_func_t);
@@ -21,7 +23,7 @@ struct ecs_system
 {
     const char *name;
     void (*process_begin)(struct ecs *ecs, void *u_data);
-    void (*process)(struct ecs *ecs, void *u_data, u32 entity, f32 dt);
+    void (*process)(struct ecs *ecs, void *u_data, u32 entity, r32 dt);
     void (*process_end)(struct ecs *ecs, void *u_data);
     u32 *watched_components;
     struct bitset entities;
@@ -37,6 +39,7 @@ struct ecs_component
 struct ecs
 {
     bool initialized;
+    struct allocator *allocator;
 
     u32 data_width;
     u32 data_len;
@@ -62,9 +65,8 @@ struct ecs
 };
 
 // ecs
-struct ecs *ecs_alloc();
 void ecs_init(struct ecs *ecs);
-void ecs_process(struct ecs *ecs, void *u_data, f32 dt);
+void ecs_process(struct ecs *ecs, void *u_data, r32 dt);
 
 // component
 void ecs_create_component(struct ecs *ecs,
@@ -76,12 +78,12 @@ void ecs_create_component(struct ecs *ecs,
 void ecs_create_system(struct ecs *ecs,
                        char *name,
                        void (*process_begin)(struct ecs *, void *),
-                       void (*process)(struct ecs *, void *, u32, f32),
+                       void (*process)(struct ecs *, void *, u32, r32),
                        void (*process_end)(struct ecs *, void *),
                        u32 *system_ptr);
 
 void ecs_watch(struct ecs *e, u32 system, u32 component);
-void ecs_process_system(struct ecs *ecs, u32 system, void *u_data, f32 dt);
+void ecs_process_system(struct ecs *ecs, u32 system, void *u_data, r32 dt);
 
 // entity
 void ecs_create_entity(struct ecs *ecs, u32 *entity_ptr);

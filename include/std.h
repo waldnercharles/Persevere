@@ -20,7 +20,6 @@
 #endif
 
 #include <GL/glew.h>
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 
@@ -32,9 +31,13 @@ typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
-typedef float f32;
-typedef double f64;
+typedef float r32;
+typedef double r64;
 
 #define unused(x) (void)x
+
+#define kilobytes(x) (x * 1024L)
+#define megabytes(x) (kilobytes(x) * 1024L)
+#define gigabytes(x) (megabytes(x) * 1024L)
 
 #endif

@@ -4,22 +4,23 @@
 
 #include "game.h"
 
-#include "engine.c"
+#include "allocators/allocator.c"
 #include "array.c"
-#include "asset.c"
 #include "bitset.c"
-#include "map.c"
 #include "ecs.c"
+#include "engine.c"
 #include "file.c"
-#include "vec.c"
+#include "map.c"
 #include "mixer.c"
 #include "renderer.c"
 #include "shader.c"
 #include "sparse_set.c"
+#include "vec.c"
 
-#include "assets/sound_asset.c"
-#include "assets/shader_asset.c"
+#include "asset.c"
 #include "assets/texture_asset.c"
+#include "assets/shader_asset.c"
+#include "assets/sound_asset.c"
 
 #include "components/body_component.h"
 #include "components/movement_component.h"
@@ -29,70 +30,80 @@
 #include "systems/render_system.c"
 
 void
-game_init(struct game *game)
+game_create_components(struct ecs *ecs, struct component_handles *components)
 {
-    init(game);
+    ecs_create_component(ecs,
+                         "movement_component",
+                         sizeof(struct movement),
+                         &components->movement);
+
+    ecs_create_component(ecs,
+                         "body_component",
+                         sizeof(struct body),
+                         &components->body);
+
+    ecs_create_component(ecs,
+                         "render_component",
+                         sizeof(struct render),
+                         &components->render);
+}
+
+void
+game_create_systems(struct ecs *ecs,
+                    struct component_handles *components,
+                    struct system_handles *systems)
+{
+    ecs_create_system(ecs,
+                      "movement_system",
+                      NULL,
+                      movement_system_process,
+                      NULL,
+                      &systems->movement);
+
+    ecs_watch(ecs, systems->movement, components->movement);
+    ecs_watch(ecs, systems->movement, components->body);
+
+    ecs_create_system(ecs,
+                      "render_system",
+                      render_system_process_begin,
+                      render_system_process,
+                      render_system_process_end,
+                      &systems->render);
+
+    ecs_watch(ecs, systems->render, components->render);
+    ecs_watch(ecs, systems->render, components->body);
+}
+
+void
+game_start(struct engine *engine)
+{
+    u32 entity;
+    struct component_handles components;
+    struct body body = { 0 };
+    struct render render = { 0 };
 
     u32 shader, *frag, *vert;
     struct mixer_source *chopin;
     struct renderer_texture *spritesheet;
 
-    chopin = asset_get(game->assets, "assets/chopin.ogg");
+    chopin = asset_get(engine->assets, "assets/chopin.ogg");
+    frag = asset_get(engine->assets, "assets/shader.frag");
+    vert = asset_get(engine->assets, "assets/shader.vert");
+    spritesheet = asset_get(engine->assets, "assets/industrial.png");
 
-    frag = asset_get(game->assets, "assets/shader.frag");
-    vert = asset_get(game->assets, "assets/shader.vert");
-    spritesheet = asset_get(game->assets, "assets/industrial.png");
-
-    shader = shader_program_link(*frag, *vert);
+    shader = shader_program_link(*vert, *frag);
 
     mixer_set_loop(chopin, 1);
-    mixer_play(game->mixer, chopin);
+    mixer_play(engine->mixer, chopin);
 
-    renderer_init(game->renderer);
+    game_create_components(engine->ecs, &engine->component_handles);
+    game_create_systems(engine->ecs,
+                        &engine->component_handles,
+                        &engine->system_handles);
 
-    // components
-    ecs_create_component(game->ecs,
-                         "movement_component",
-                         sizeof(struct movement),
-                         &movement_component);
+    ecs_init(engine->ecs);
 
-    ecs_create_component(game->ecs,
-                         "body_component",
-                         sizeof(struct body),
-                         &body_component);
-
-    ecs_create_component(game->ecs,
-                         "render_component",
-                         sizeof(struct render),
-                         &render_component);
-
-    // systems
-    ecs_create_system(game->ecs,
-                      "movement_system",
-                      NULL,
-                      movement_system_process,
-                      NULL,
-                      &movement_system);
-
-    ecs_watch(game->ecs, movement_system, movement_component);
-    ecs_watch(game->ecs, movement_system, body_component);
-
-    ecs_create_system(game->ecs,
-                      "render_system",
-                      render_system_process_begin,
-                      render_system_process,
-                      render_system_process_end,
-                      &render_system);
-
-    ecs_watch(game->ecs, render_system, render_component);
-    ecs_watch(game->ecs, render_system, body_component);
-
-    // init
-    ecs_init(game->ecs);
-
-    u32 entity;
-    struct body body = { 0 };
-    struct render render = { 0 };
+    components = engine->component_handles;
 
     body.pos = vec2(-0.5f, -0.5f);
     body.size = vec2(1.0f, 1.0f);
@@ -100,20 +111,19 @@ game_init(struct game *game)
     render.shader = shader;
     render.texture = spritesheet->id;
 
-    f32 tile_width = 1.0f / 32.0f;
+    r32 tile_width = 1.0f / 32.0f;
     render.uv_offset = vec2(0 * tile_width, 15 * tile_width);
 
-    ecs_create_entity(game->ecs, &entity);
-    ecs_set_component(game->ecs, entity, body_component, &body);
-    ecs_set_component(game->ecs, entity, render_component, &render);
-    ecs_set_state(game->ecs, entity, ECS_STATE_ADDED);
+    ecs_create_entity(engine->ecs, &entity);
+    ecs_set_component(engine->ecs, entity, components.body, &body);
+    ecs_set_component(engine->ecs, entity, components.render, &render);
+    ecs_set_state(engine->ecs, entity, ECS_STATE_ADDED);
 }
 
 void
-game_loop(struct game *game, f32 dt)
+game_loop(struct engine *engine, r32 dt)
 {
-    unused(game), unused(dt);
-    ecs_process(game->ecs, game, dt);
+    ecs_process(engine->ecs, engine, dt);
     // union mat4 model, view, projection;
     // u32 shader_program;
     // (void)dt;

@@ -25,6 +25,7 @@
             log_fmt message log_newline,                                       \
             log_args(log_error_tag),                                           \
             ##__VA_ARGS__),                                                    \
+        fprintf(stdout, "Press any key to continue..."), getchar(),            \
         exit(EXIT_FAILURE)
 #else
 #define error(message, ...)

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef RENDER_COMPONENT_H
+#define RENDER_COMPONENT_H
+
 #include "std.h"
 #include "vec.h"
 
@@ -8,4 +10,5 @@ struct render
     u32 texture;
     union vec2 uv_offset;
 };
-u32 render_component;
+
+#endif

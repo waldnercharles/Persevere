@@ -3,6 +3,11 @@
 #include "log.h"
 #include "str.h"
 
+#define GAME_TITLE "persevere-core"
+#define DLL_FILE "./" GAME_TITLE ".dll"
+#define TMP_FILE "./temp-" GAME_TITLE ".dll"
+#define LOCK_FILE "./" GAME_TITLE ".lock"
+
 static time_t
 get_last_write_time(char *filename)
 {
@@ -16,7 +21,7 @@ get_last_write_time(char *filename)
 }
 
 void
-unload_game(struct game_dll *game)
+unload_game(struct game_dll *dll)
 {
     char *base_path = SDL_GetBasePath();
     char *lock_path = string_new(base_path);
@@ -25,16 +30,16 @@ unload_game(struct game_dll *game)
     if (!file_exists(lock_path))
     {
         log_debug("Unloading Game Dll...");
-        SDL_UnloadObject(game->library);
-        game->library = 0;
-        game->game_loop = 0;
+        SDL_UnloadObject(dll->library);
+        dll->library = 0;
+        dll->game_loop = 0;
     }
 
     string_free(lock_path);
 }
 
 void
-load_game(char *library_name, struct game_dll *game)
+load_game(char *library_name, struct game_dll *dll)
 {
     char *base_path = SDL_GetBasePath();
     char *lock_path = string_new(base_path);
@@ -48,32 +53,32 @@ load_game(char *library_name, struct game_dll *game)
     library_temp_path = string_append_cstring(library_temp_path, "temp-");
     library_temp_path = string_append_cstring(library_temp_path, library_name);
 
-    game->game_loop = 0;
+    dll->game_loop = 0;
 
     if (!file_exists(lock_path))
     {
         file_copy(library_path, library_temp_path);
 
         log_debug("Loading Game Dll...");
-        game->library = (void *)SDL_LoadObject(library_temp_path);
-        if (game->library == NULL)
+        dll->library = (void *)SDL_LoadObject(library_temp_path);
+        if (dll->library == NULL)
         {
             err = SDL_GetError();
             log_warning("Can't load library: %s\n", err);
             goto cleanup;
         }
 
-        game->game_init = SDL_LoadFunction(game->library, "game_init");
-        game->game_loop = SDL_LoadFunction(game->library, "game_loop");
+        dll->game_init = SDL_LoadFunction(dll->library, "game_init");
+        dll->game_loop = SDL_LoadFunction(dll->library, "game_loop");
 
-        if (game->game_loop == NULL || game->game_init == NULL)
+        if (dll->game_loop == NULL || dll->game_init == NULL)
         {
             err = SDL_GetError();
             log_warning("Can't load function: %s\n", err);
         }
     }
 
-    game->last_write_time = get_last_write_time(library_temp_path);
+    dll->last_write_time = get_last_write_time(library_temp_path);
 
 cleanup:
     string_free(lock_path);
@@ -82,17 +87,17 @@ cleanup:
 }
 
 void
-load_game_if_new(char *lib_name, struct game_dll *game)
+load_game_if_new(char *lib_name, struct game_dll *dll)
 {
     char *base_path = SDL_GetBasePath();
     char *lib_path = string_append_cstring(string_new(base_path), lib_name);
 
     const time_t write_time = get_last_write_time(lib_path);
 
-    if (write_time > game->last_write_time)
+    if (write_time > dll->last_write_time)
     {
-        unload_game(game);
-        load_game(lib_name, game);
+        unload_game(dll);
+        load_game(lib_name, dll);
     }
 
     string_free(lib_path);

@@ -1,4 +1,5 @@
 #include "map.h"
+#include "log.h"
 
 static u32
 map_hash(char *str)
@@ -12,13 +13,13 @@ map_hash(char *str)
 }
 
 static struct map_node *
-map_node_alloc(char *key, void *value)
+map_node_alloc(struct map *map, char *key, void *value)
 {
     u32 key_size;
     struct map_node *node;
 
     key_size = strlen(key) + 1;
-    node = malloc(sizeof(struct map_node) + key_size);
+    node = alloc(map->allocator, sizeof(struct map_node) + key_size);
 
     node->hash = map_hash(key);
     node->key = (char *)(node + 1);
@@ -98,12 +99,13 @@ map_get_node_ptr(struct map *m, char *key)
 }
 
 struct map *
-map_alloc(u32 capacity)
+map_alloc(struct allocator *allocator, u32 capacity)
 {
     struct map *m;
 
-    m = malloc(sizeof(struct map));
-    m->buckets = calloc(capacity, sizeof(struct map_node));
+    m = alloc(allocator, sizeof(struct map));
+    m->allocator = allocator;
+    m->buckets = alloc(allocator, capacity * sizeof(struct map_node));
     m->capacity = capacity;
     m->count = 0;
 
@@ -113,9 +115,10 @@ map_alloc(u32 capacity)
 void
 map_free(struct map *m)
 {
+    unused(m);
     // TODO: Free all items in map?
-    free(m);
-    free(m->buckets);
+    // free(m);
+    // free(m->buckets);
 }
 
 bool
@@ -138,6 +141,7 @@ map_set(struct map *m, char *key, void *value)
 {
     u32 new_capacity;
     struct map_node **node, *new_node;
+    unused(new_capacity);
 
     node = map_get_node_ptr(m, key);
 
@@ -147,10 +151,12 @@ map_set(struct map *m, char *key, void *value)
         return;
     }
 
-    new_node = map_node_alloc(key, value);
+    new_node = map_node_alloc(m, key, value);
     if (m->count >= m->capacity)
     {
         new_capacity = m->capacity > 0 ? m->capacity << 1 : 1;
+        log_error("Resize not yet implemented.");
+        return;
         map_resize(m, new_capacity);
     }
     map_node_add(m, new_node);
@@ -160,14 +166,14 @@ map_set(struct map *m, char *key, void *value)
 void
 map_remove(struct map *m, char *key)
 {
-    struct map_node **node, *tmp;
+    struct map_node **node;  //, *tmp;
     node = map_get_node_ptr(m, key);
 
     if (node)
     {
-        tmp = *node;
+        // tmp = *node;
         *node = (*node)->next;
-        free(tmp);
+        // free(tmp);
         m->count--;
     }
 }

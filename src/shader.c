@@ -26,11 +26,11 @@ shader_compile(GLenum type, const char *source)
 }
 
 u32
-shader_load(GLenum type, const char *path)
+shader_load(struct allocator *allocator, GLenum type, const char *path)
 {
-    char *source = file_load_cstr(path, NULL);
+    char *source = file_load_cstr(allocator, path, NULL);
     u32 shader = shader_compile(type, source);
-    free(source);
+    // free(source);
     return shader;
 }
 
@@ -63,10 +63,12 @@ shader_program_link(u32 vert_shader, u32 frag_shader)
 }
 
 u32
-shader_program_load(const char *vert_path, const char *frag_path)
+shader_program_load(struct allocator *allocator,
+                    const char *vert_path,
+                    const char *frag_path)
 {
-    u32 vert_shader = shader_load(GL_VERTEX_SHADER, vert_path);
-    u32 frag_shader = shader_load(GL_FRAGMENT_SHADER, frag_path);
+    u32 vert_shader = shader_load(allocator, GL_VERTEX_SHADER, vert_path);
+    u32 frag_shader = shader_load(allocator, GL_FRAGMENT_SHADER, frag_path);
     u32 program = shader_program_link(vert_shader, frag_shader);
     return program;
 }

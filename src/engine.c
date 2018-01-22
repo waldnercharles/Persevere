@@ -85,7 +85,7 @@ engine_audio_init(struct engine *engine)
 {
     struct platform *platform = engine->platform;
 
-    log_debug("Initializing Audio...");
+    log_debug("Allocating & Initializing Audio...");
 
     engine->mixer = alloc(platform->memory->permanent, sizeof(struct mixer));
 
@@ -116,7 +116,7 @@ engine_renderer_init(struct engine *engine)
 {
     struct platform *platform = engine->platform;
 
-    log_debug("Initializing Renderer...");
+    log_debug("Allocating & Initializing Renderer...");
 
     engine->renderer =
         alloc(platform->memory->permanent, sizeof(struct renderer));
@@ -129,7 +129,7 @@ engine_asset_init(struct engine *engine)
 {
     struct platform *platform = engine->platform;
 
-    log_debug("Initializing Asset Manager...");
+    log_debug("Allocating & Initializing Asset Manager...");
 
     engine->assets =
         alloc(platform->memory->permanent, sizeof(struct asset_manager));
@@ -156,11 +156,10 @@ engine_asset_init(struct engine *engine)
 void
 engine_init(struct platform *platform, struct engine **engine)
 {
-    log_debug("Allocating Engine...");
+    log_debug("Allocating & Initializing Engine...");
     *engine = alloc(platform->memory->permanent, sizeof(struct engine));
     (*engine)->platform = platform;
 
-    log_debug("Initializing Engine...");
     engine_ecs_init(*engine);
     engine_audio_init(*engine);
     engine_renderer_init(*engine);

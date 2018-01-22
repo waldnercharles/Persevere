@@ -13,10 +13,10 @@ SYS_INCLUDE = -isystem $(ROOT)/include -isystem third_party -I $(INCLUDE)
 
 all: game platform assets
 
-pre: $(INCLUDE)/nerd_engine.h
-	@echo "Precompiling engine header..."
-	@$(CC) $(CFLAGS) $(SYS_INCLUDE) $(INCLUDE)/nerd_engine.h
-	@echo "Precompiling engine header...Done"
+# pre: $(INCLUDE)/nerd_engine.h
+# 	@echo "Precompiling engine header..."
+# 	@$(CC) $(CFLAGS) $(SYS_INCLUDE) $(INCLUDE)/nerd_engine.h
+# 	@echo "Precompiling engine header...Done"
 
 game: $(SRC)/game.c
 	@echo "Building Game..."

@@ -3,14 +3,16 @@
 #include "log.h"
 
 #include "platform.h"
+#include "engine.h"
+
+#include "allocators/allocator.c"
+#include "allocators/linear_allocator.c"
+#include "file.c"
+
 #include "platform_audio.c"
 #include "platform_sdl_audio.c"
 #include "platform_sdl_dll.c"
 #include "platform_sdl_input.c"
-
-#include "engine.h"
-
-#include "unity.c"
 
 void
 platform_glew_init()

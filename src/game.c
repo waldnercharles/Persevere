@@ -96,40 +96,4 @@ void
 game_loop(struct engine *engine, r32 dt)
 {
     ecs_process(engine->ecs, engine, dt);
-    // union mat4 model, view, projection;
-    // u32 shader_program;
-    // (void)dt;
-
-    // shader_program = game->shader;
-
-    // model = mat4(1.0f);
-
-    // model = mat4_mul(model, mat4_translate(vec3(0.0f, 0.0f, 0.0f)));
-
-    // model = mat4_mul(model,
-    //                  mat4_rotate(vec3(1.0f, 0.0f, 0.0f),
-    //                  math_radians(-65.0f)));
-
-    // model = mat4_mul(model,
-    //                  mat4_rotate(vec3(0.0f, 0.0f, 1.0f),
-    //                  math_radians(60.0f)));
-
-    // view = mat4_translate(vec3(0.0f, 0.0f, -3.0f));
-
-    // projection = mat4_perspective(math_radians(45.0f), 1.0f, 0.1f, 100.0f);
-
-    // u32 model_loc = glGetUniformLocation(shader_program, "model");
-    // u32 view_loc = glGetUniformLocation(shader_program, "view");
-    // u32 proj_loc = glGetUniformLocation(shader_program, "projection");
-
-    // glUniformMatrix4fv(model_loc, 1, GL_FALSE, &model.m[0][0]);
-    // glUniformMatrix4fv(view_loc, 1, GL_FALSE, &view.m[0][0]);
-    // glUniformMatrix4fv(proj_loc, 1, GL_FALSE, &projection.m[0][0]);
-
-    // glUseProgram(shader_program);
-
-    // glBindVertexArray(game->VAO);
-    // glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    // ecs_process(game_state->ecs, dt);
 }

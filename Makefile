@@ -32,8 +32,8 @@ platform: $(SRC)/platform_sdl.c
 
 assets:
 	@echo "Copying Assets..."
-	@cp -n $(ROOT)/bin/SDL2.dll $(BIN)
-	@cp -n $(ASSETS)/* $(BIN)/$(ASSETS)
+	@cp -u $(ROOT)/bin/SDL2.dll $(BIN)
+	@cp -u $(ASSETS)/* $(BIN)/$(ASSETS)
 	@echo "Copying Assets...Done"
 
 clean:

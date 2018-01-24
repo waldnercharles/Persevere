@@ -58,6 +58,8 @@ game_start(struct engine *engine)
     struct mixer_source *chopin;
     struct renderer_texture *spritesheet;
 
+    r32 tile_width = 1.0f / 32.0f;
+
     chopin = asset_get(engine->assets, "assets/chopin.ogg");
     frag = asset_get(engine->assets, "assets/shader.frag");
     vert = asset_get(engine->assets, "assets/shader.vert");
@@ -77,19 +79,25 @@ game_start(struct engine *engine)
 
     components = engine->component_handles;
 
-    body.pos = vec2(-0.5f, -0.5f);
-    body.size = vec2(1.0f, 1.0f);
-
     render.shader = shader;
     render.texture = spritesheet->id;
 
-    r32 tile_width = 1.0f / 32.0f;
     render.uv_offset = vec2(0 * tile_width, 15 * tile_width);
 
-    ecs_create_entity(engine->ecs, &entity);
-    ecs_set_component(engine->ecs, entity, components.body, &body);
-    ecs_set_component(engine->ecs, entity, components.render, &render);
-    ecs_set_state(engine->ecs, entity, ECS_STATE_ADDED);
+    s32 i, j;
+    body.size = vec2(2.0f / 16.0f, 2.0f / 16.0f);
+    for (i = 0; i < 16; ++i)
+    {
+        for (j = 0; j < 16; ++j)
+        {
+            body.pos = vec2(i * body.size.x - 1.0f, j * body.size.y - 1.0f);
+
+            ecs_create_entity(engine->ecs, &entity);
+            ecs_set_component(engine->ecs, entity, components.body, &body);
+            ecs_set_component(engine->ecs, entity, components.render, &render);
+            ecs_set_state(engine->ecs, entity, ECS_STATE_ADDED);
+        }
+    }
 }
 
 void

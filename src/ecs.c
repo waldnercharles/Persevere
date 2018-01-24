@@ -117,7 +117,7 @@ ecs_process(struct ecs *ecs, void *u_data, r32 dt)
 
         bitset_for_each (i, &(system->entities))
         {
-            system->process(ecs, u_data, entity, dt);
+            system->process(ecs, u_data, i, dt);
         }
 
         if (system->process_end)

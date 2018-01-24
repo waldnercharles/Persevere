@@ -22,8 +22,8 @@ vec2 rotate(vec2 v, float a)
 
 void main()
 {
-    vec2 rotated_quad = rotate(quad - vec2(0.5, 0.5), theta) + vec2(0.5, 0.5);
-	gl_Position = vec4((rotated_quad + pos) * size, 0.0, 1.0);
+    vec2 rotated_quad = (rotate(quad - vec2(0.5, 0.5), theta) + vec2(0.5, 0.5)) * size;
+	gl_Position = vec4((rotated_quad + pos), 0.0, 1.0);
 	vs_out.col = vec3(1.0, 1.0, 1.0);
     vs_out.tex = (quad / 32.0) + tex;
 }

@@ -6,10 +6,10 @@
 
 struct renderer_sprite
 {
-    union vec2 pos;
-    union vec2 size;
+    v2 pos;
+    v2 size;
     r32 theta;
-    union vec2 uv;
+    v2 uv;
 };
 
 struct renderer_state

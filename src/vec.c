@@ -32,137 +32,137 @@
     v.w eq v0.w op n
 // clang-format on
 
-union vec2
+v2
 vec2(r32 x, r32 y)
 {
-    union vec2 v = { x, y };
+    v2 v = { x, y };
     return v;
 }
 
-union vec3
+v3
 vec3(r32 x, r32 y, r32 z)
 {
-    union vec3 v = { x, y, z };
+    v3 v = { x, y, z };
     return v;
 }
 
-union vec4
+v4
 vec4(r32 x, r32 y, r32 z, r32 w)
 {
-    union vec4 v = { x, y, z, w };
+    v4 v = { x, y, z, w };
     return v;
 }
 
-union vec2
+v2
 vec2_zero()
 {
     return vec2(0, 0);
 }
 
-union vec3
+v3
 vec3_zero()
 {
     return vec3(0, 0, 0);
 }
 
-union vec4
+v4
 vec4_zero()
 {
     return vec4(0, 0, 0, 0);
 }
 
-union vec2
-vec2_add(union vec2 a, union vec2 b)
+v2
+vec2_add(v2 a, v2 b)
 {
-    union vec2 r;
+    v2 r;
     vec2_op(r, =, a, +, b);
     return r;
 }
 
-union vec2
-vec2_sub(union vec2 a, union vec2 b)
+v2
+vec2_sub(v2 a, v2 b)
 {
-    union vec2 r;
+    v2 r;
     vec2_op(r, =, a, -, b);
     return r;
 }
 
-union vec2
-vec2_mul(union vec2 v, r32 n)
+v2
+vec2_mul(v2 v, r32 n)
 {
-    union vec2 r;
+    v2 r;
     vec2_op_scalar(r, =, v, *, n);
     return r;
 }
 
-union vec2
-vec2_div(union vec2 v, r32 n)
+v2
+vec2_div(v2 v, r32 n)
 {
-    union vec2 r;
+    v2 r;
     vec2_op_scalar(r, =, v, /, n);
     return r;
 }
 
-union vec3
-vec3_add(union vec3 a, union vec3 b)
+v3
+vec3_add(v3 a, v3 b)
 {
-    union vec3 r;
+    v3 r;
     vec3_op(r, =, a, +, b);
     return r;
 };
 
-union vec3
-vec3_sub(union vec3 a, union vec3 b)
+v3
+vec3_sub(v3 a, v3 b)
 {
-    union vec3 r;
+    v3 r;
     vec3_op(r, =, a, -, b);
     return r;
 };
 
-union vec3
-vec3_mul(union vec3 v, r32 n)
+v3
+vec3_mul(v3 v, r32 n)
 {
-    union vec3 r;
+    v3 r;
     vec3_op_scalar(r, =, v, *, n);
     return r;
 };
 
-union vec3
-vec3_div(union vec3 v, r32 n)
+v3
+vec3_div(v3 v, r32 n)
 {
-    union vec3 r;
+    v3 r;
     vec3_op_scalar(r, =, v, /, n);
     return r;
 };
 
-union vec4
-vec4_add(union vec4 a, union vec4 b)
+v4
+vec4_add(v4 a, v4 b)
 {
-    union vec4 r;
+    v4 r;
     vec4_op(r, =, a, +, b);
     return r;
 };
 
-union vec4
-vec4_sub(union vec4 a, union vec4 b)
+v4
+vec4_sub(v4 a, v4 b)
 {
-    union vec4 r;
+    v4 r;
     vec4_op(r, =, a, -, b);
     return r;
 };
 
-union vec4
-vec4_mul(union vec4 v, r32 n)
+v4
+vec4_mul(v4 v, r32 n)
 {
-    union vec4 r;
+    v4 r;
     vec4_op_scalar(r, =, v, *, n);
     return r;
 };
 
-union vec4
-vec4_div(union vec4 v, r32 n)
+v4
+vec4_div(v4 v, r32 n)
 {
-    union vec4 r;
+    v4 r;
     vec4_op_scalar(r, =, v, /, n);
     return r;
 };
@@ -171,64 +171,64 @@ vec4_div(union vec4 v, r32 n)
 #undef vec3_op
 #undef vec4_op
 
-union vec2
-vec2_norm(union vec2 v)
+v2
+vec2_norm(v2 v)
 {
     return vec2_div(v, vec2_mag(v));
 }
 
-union vec3
-vec3_norm(union vec3 v)
+v3
+vec3_norm(v3 v)
 {
     return vec3_div(v, vec3_mag(v));
 }
 
-union vec4
-vec4_norm(union vec4 v)
+v4
+vec4_norm(v4 v)
 {
     return vec4_div(v, vec4_mag(v));
 }
 
 r32
-vec2_dot(union vec2 a, union vec2 b)
+vec2_dot(v2 a, v2 b)
 {
     return a.x * b.x + a.y * b.y;
 }
 
 r32
-vec3_dot(union vec3 a, union vec3 b)
+vec3_dot(v3 a, v3 b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 r32
-vec4_dot(union vec4 a, union vec4 b)
+vec4_dot(v4 a, v4 b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 }
 
 r32
-vec2_mag(union vec2 v)
+vec2_mag(v2 v)
 {
     return sqrtf(vec2_dot(v, v));
 }
 
 r32
-vec3_mag(union vec3 v)
+vec3_mag(v3 v)
 {
     return sqrtf(vec3_dot(v, v));
 };
 
 r32
-vec4_mag(union vec4 v)
+vec4_mag(v4 v)
 {
     return sqrtf(vec4_dot(v, v));
 };
 
-union vec2
-vec2_rotate(union vec2 v, r32 angle_radians)
+v2
+vec2_rotate(v2 v, r32 angle_radians)
 {
-    union vec2 r;
+    v2 r;
     r32 c = cosf(angle_radians);
     r32 s = sinf(angle_radians);
 
@@ -238,29 +238,29 @@ vec2_rotate(union vec2 v, r32 angle_radians)
     return r;
 }
 
-union vec2
-mat2_mul_vec2(union mat2 m, union vec2 v)
+v2
+mat2_mul_vec2(m2 m, v2 v)
 {
-    union vec2 r;
+    v2 r;
     r.x = m.m[0][0] * v.x + m.m[1][0] * v.y;
     r.y = m.m[0][1] * v.x + m.m[1][1] * v.y;
     return r;
 }
 
-union vec3
-mat3_mul_vec3(union mat3 m, union vec3 v)
+v3
+mat3_mul_vec3(m3 m, v3 v)
 {
-    union vec3 r;
+    v3 r;
     r.x = m.m[0][0] * v.x + m.m[1][0] * v.y + m.m[2][0] * v.z;
     r.y = m.m[0][1] * v.x + m.m[1][1] * v.y + m.m[2][1] * v.z;
     r.z = m.m[0][2] * v.x + m.m[1][2] * v.y + m.m[2][2] * v.z;
     return r;
 }
 
-union vec4
-mat4_mul_vec4(union mat4 m, union vec4 v)
+v4
+mat4_mul_vec4(m4 m, v4 v)
 {
-    union vec4 r;
+    v4 r;
     r.x = m.m[0][0] * v.x + m.m[1][0] * v.y + m.m[2][0] * v.z + m.m[3][0] * v.w;
     r.y = m.m[0][1] * v.x + m.m[1][1] * v.y + m.m[2][1] * v.z + m.m[3][1] * v.w;
     r.z = m.m[0][2] * v.x + m.m[1][2] * v.y + m.m[2][2] * v.z + m.m[3][2] * v.w;
@@ -268,53 +268,53 @@ mat4_mul_vec4(union mat4 m, union vec4 v)
     return r;
 }
 
-union mat2
+m2
 mat2_zero()
 {
-    union mat2 m;
-    memset(&m, 0, sizeof(union mat2));
+    m2 m;
+    memset(&m, 0, sizeof(m2));
     return m;
 }
 
-union mat3
+m3
 mat3_zero()
 {
-    union mat3 m;
-    memset(&m, 0, sizeof(union mat3));
+    m3 m;
+    memset(&m, 0, sizeof(m3));
     return m;
 }
 
-union mat4
+m4
 mat4_zero()
 {
-    union mat4 m;
-    memset(&m, 0, sizeof(union mat4));
+    m4 m;
+    memset(&m, 0, sizeof(m4));
     return m;
 }
 
-union mat2
+m2
 mat2(r32 d)
 {
-    union mat2 m = mat2_zero();
+    m2 m = mat2_zero();
     m.m[0][0] = d;
     m.m[1][1] = d;
     return m;
 }
 
-union mat3
+m3
 mat3(r32 d)
 {
-    union mat3 m = mat3_zero();
+    m3 m = mat3_zero();
     m.m[0][0] = d;
     m.m[1][1] = d;
     m.m[2][2] = d;
     return m;
 }
 
-union mat4
+m4
 mat4(r32 d)
 {
-    union mat4 m = mat4_zero();
+    m4 m = mat4_zero();
     m.m[0][0] = d;
     m.m[1][1] = d;
     m.m[2][2] = d;
@@ -322,19 +322,19 @@ mat4(r32 d)
     return m;
 }
 
-union mat2
-mat2_transpose(union mat2 m)
+m2
+mat2_transpose(m2 m)
 {
-    union mat2 r;
+    m2 r;
     r.m[0][1] = m.m[1][0];
     r.m[1][0] = m.m[0][1];
     return r;
 }
 
-union mat3
-mat3_transpose(union mat3 m)
+m3
+mat3_transpose(m3 m)
 {
-    union mat3 r;
+    m3 r;
     r.m[0][1] = m.m[1][0];
     r.m[0][2] = m.m[2][0];
     r.m[1][0] = m.m[0][1];
@@ -344,10 +344,10 @@ mat3_transpose(union mat3 m)
     return r;
 }
 
-union mat4
-mat4_transpose(union mat4 m)
+m4
+mat4_transpose(m4 m)
 {
-    union mat4 r;
+    m4 r;
     r.m[0][1] = m.m[1][0];
     r.m[0][2] = m.m[2][0];
     r.m[0][3] = m.m[3][0];
@@ -363,10 +363,10 @@ mat4_transpose(union mat4 m)
     return r;
 }
 
-union mat4
-mat4_mul(union mat4 a, union mat4 b)
+m4
+mat4_mul(m4 a, m4 b)
 {
-    union mat4 m;
+    m4 m;
     u32 col, row;
     for (col = 0; col < 4; ++col)
     {
@@ -380,18 +380,18 @@ mat4_mul(union mat4 a, union mat4 b)
     return m;
 }
 
-union mat4
-mat4_translate(union vec3 v)
+m4
+mat4_translate(v3 v)
 {
-    union mat4 m = mat4(1.0f);
+    m4 m = mat4(1.0f);
     m.col[3].xyz = vec3_add(m.col[3].xyz, v);
     return m;
 }
 
-union mat4
-mat4_scale(union vec3 v)
+m4
+mat4_scale(v3 v)
 {
-    union mat4 m = mat4(1.0f);
+    m4 m = mat4(1.0f);
 
     m.m[0][0] = v.x;
     m.m[1][1] = v.y;
@@ -400,10 +400,10 @@ mat4_scale(union vec3 v)
     return m;
 }
 
-union mat4
-mat4_rotate(union vec3 axis, r32 angle_radians)
+m4
+mat4_rotate(v3 axis, r32 angle_radians)
 {
-    union mat4 m = mat4(1.0f);
+    m4 m = mat4(1.0f);
 
     r32 s = sinf(angle_radians);
     r32 c = cosf(angle_radians);
@@ -426,10 +426,10 @@ mat4_rotate(union vec3 axis, r32 angle_radians)
     return m;
 }
 
-union mat4
+m4
 mat4_ortho(r32 left, r32 right, r32 bottom, r32 top, r32 near, r32 far)
 {
-    union mat4 m = mat4(1.0f);
+    m4 m = mat4(1.0f);
 
     m.m[0][0] = 2.0f / (right - left);
     m.m[1][1] = 2.0f / (top - bottom);
@@ -442,10 +442,10 @@ mat4_ortho(r32 left, r32 right, r32 bottom, r32 top, r32 near, r32 far)
     return m;
 }
 
-union mat4
+m4
 mat4_perspective(r32 fov_radians, r32 aspect, r32 near, r32 far)
 {
-    union mat4 m = mat4_zero();
+    m4 m = mat4_zero();
 
     r32 tan_half_fov = tanh(fov_radians / 2.0f);
 

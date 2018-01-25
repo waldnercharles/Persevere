@@ -45,120 +45,123 @@ union vec2
     struct { r32 x, y; };
     r32 e[2];
 };
+typedef union vec2 v2;
 
 union vec3
 {
     struct { r32 x, y, z; };
     struct { r32 r, g, b; };
-    union vec2 xy;
+    v2 xy;
     r32 e[3];
 };
+typedef union vec3 v3;
 
 union vec4
 {
     struct { r32 x, y, z, w; };
     struct { r32 r, g, b, a; };
     struct { r32 top, right, bottom, left; };
-    struct { union vec2 xy, zw; };
-    union vec3 xyz;
-    union vec3 rgb;
+    struct { v2 xy, zw; };
+    v3 xyz;
+    v3 rgb;
     r32 e[4];
 };
+typedef union vec4 v4;
 // clang-format on
 
-union vec2 vec2(r32 x, r32 y);
-union vec3 vec3(r32 x, r32 y, r32 z);
-union vec4 vec4(r32 x, r32 y, r32 z, r32 w);
+v2 vec2(r32 x, r32 y);
+v3 vec3(r32 x, r32 y, r32 z);
+v4 vec4(r32 x, r32 y, r32 z, r32 w);
 
-union vec2 vec2_zero();
-union vec3 vec3_zero();
-union vec4 vec4_zero();
+v2 vec2_zero();
+v3 vec3_zero();
+v4 vec4_zero();
 
-union vec2 vec2_add(union vec2 a, union vec2 b);
-union vec2 vec2_sub(union vec2 a, union vec2 b);
-union vec2 vec2_mul(union vec2 v, r32 n);
-union vec2 vec2_div(union vec2 v, r32 n);
+v2 vec2_add(v2 a, v2 b);
+v2 vec2_sub(v2 a, v2 b);
+v2 vec2_mul(v2 v, r32 n);
+v2 vec2_div(v2 v, r32 n);
 
-union vec3 vec3_add(union vec3 a, union vec3 b);
-union vec3 vec3_sub(union vec3 a, union vec3 b);
-union vec3 vec3_mul(union vec3 v, r32 n);
-union vec3 vec3_div(union vec3 v, r32 n);
+v3 vec3_add(v3 a, v3 b);
+v3 vec3_sub(v3 a, v3 b);
+v3 vec3_mul(v3 v, r32 n);
+v3 vec3_div(v3 v, r32 n);
 
-union vec4 vec4_add(union vec4 a, union vec4 b);
-union vec4 vec4_sub(union vec4 a, union vec4 b);
-union vec4 vec4_mul(union vec4 v, r32 n);
-union vec4 vec4_div(union vec4 v, r32 n);
+v4 vec4_add(v4 a, v4 b);
+v4 vec4_sub(v4 a, v4 b);
+v4 vec4_mul(v4 v, r32 n);
+v4 vec4_div(v4 v, r32 n);
 
-union vec2 vec2_norm(union vec2 v);
-union vec3 vec3_norm(union vec3 v);
-union vec4 vec4_norm(union vec4 v);
+v2 vec2_norm(v2 v);
+v3 vec3_norm(v3 v);
+v4 vec4_norm(v4 v);
 
-union vec2 vec2_rotate(union vec2 v, r32 theta);
+v2 vec2_rotate(v2 v, r32 theta);
 
-r32 vec2_dot(union vec2 a, union vec2 b);
-r32 vec3_dot(union vec3 a, union vec3 b);
-r32 vec4_dot(union vec4 a, union vec4 b);
+r32 vec2_dot(v2 a, v2 b);
+r32 vec3_dot(v3 a, v3 b);
+r32 vec4_dot(v4 a, v4 b);
 
-r32 vec2_mag(union vec2 v);
-r32 vec3_mag(union vec3 v);
-r32 vec4_mag(union vec4 v);
+r32 vec2_mag(v2 v);
+r32 vec3_mag(v3 v);
+r32 vec4_mag(v4 v);
 
 // clang-format off
 union mat2
 {
-    struct { union vec2 x, y; };
-    union vec2 col[2];
+    struct { v2 x, y; };
+    v2 col[2];
     r32 m[2][2];
     r32 e[4];
 
 };
+typedef union mat2 m2;
 
 union mat3
 {
-    struct { union vec3 x, y, z; };
-    union vec3 col[3];
+    struct { v3 x, y, z; };
+    v3 col[3];
     r32 m[3][3];
     r32 e[9];
 
 };
+typedef union mat3 m3;
 
 union mat4
 {
-    struct { union vec4 x, y, z, w; };
-    union vec4 col[4];
+    struct { v4 x, y, z, w; };
+    v4 col[4];
     r32 m[4][4];
     r32 e[16];
 };
+typedef union mat4 m4;
+
 // clang-format on
 
-union vec2 mat2_mul_vec2(union mat2 m, union vec2 v);
-union vec3 mat3_mul_vec3(union mat3 m, union vec3 v);
-union vec4 mat4_mul_vec4(union mat4 m, union vec4 v);
+v2 mat2_mul_vec2(m2 m, v2 v);
+v3 mat3_mul_vec3(m3 m, v3 v);
+v4 mat4_mul_vec4(m4 m, v4 v);
 
-union mat2 mat2_zero();
-union mat3 mat3_zero();
-union mat4 mat4_zero();
+m2 mat2_zero();
+m3 mat3_zero();
+m4 mat4_zero();
 
-union mat2 mat2(r32 d);
-union mat3 mat3(r32 d);
-union mat4 mat4(r32 d);
+m2 mat2(r32 d);
+m3 mat3(r32 d);
+m4 mat4(r32 d);
 
-union mat2 mat2_transpose(union mat2 m);
-union mat3 mat3_transpose(union mat3 m);
-union mat4 mat4_transpose(union mat4 m);
+m2 mat2_transpose(m2 m);
+m3 mat3_transpose(m3 m);
+m4 mat4_transpose(m4 m);
 
-union mat4 mat4_mul(union mat4 a, union mat4 b);
+m4 mat4_mul(m4 a, m4 b);
 
-union mat4 mat4_translate(union vec3 v);
-union mat4 mat4_scale(union vec3 v);
-union mat4 mat4_rotate(union vec3 axis, r32 angle_radians);
+m4 mat4_translate(v3 v);
+m4 mat4_scale(v3 v);
+m4 mat4_rotate(v3 axis, r32 angle_radians);
 
-union mat4 mat4_ortho(r32 left,
-                      r32 right,
-                      r32 bottom,
-                      r32 top,
-                      r32 near,
-                      r32 far);
+m4 mat4_ortho(r32 left, r32 right, r32 bottom, r32 top, r32 near, r32 far);
 
-union mat4 mat4_perspective(r32 fovy, r32 aspect, r32 near, r32 far);
+m4 mat4_perspective(r32 fovy, r32 aspect, r32 near, r32 far);
+
 #endif

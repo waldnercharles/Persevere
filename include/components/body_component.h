@@ -6,8 +6,8 @@
 
 struct body
 {
-    union vec2 pos;
-    union vec2 size;
+    v2 pos;
+    v2 size;
     r32 theta;
 };
 

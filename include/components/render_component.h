@@ -8,7 +8,7 @@ struct render
 {
     u32 shader;
     u32 texture;
-    union vec2 uv_offset;
+    v2 uv_offset;
 };
 
 #endif

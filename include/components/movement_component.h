@@ -6,7 +6,7 @@
 
 struct movement
 {
-    union vec2 vel;
+    v2 vel;
     r32 angular_vel;
 };
 

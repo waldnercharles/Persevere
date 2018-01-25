@@ -108,6 +108,18 @@ platform_handle_events(struct engine *engine)
             case SDL_QUIT:
                 return false;
 
+            case SDL_WINDOWEVENT:
+                switch (event.window.event)
+                {
+                    case SDL_WINDOWEVENT_RESIZED:
+                        glViewport(0,
+                                   0,
+                                   event.window.data1,
+                                   event.window.data2);
+                        break;
+                }
+                break;
+
             case SDL_CONTROLLERDEVICEADDED:
                 platform_open_controller(engine, event.cdevice.which);
                 break;

@@ -5,7 +5,7 @@
 #include "renderer.h"
 #include "renderers/sprite_renderer.h"
 
-#include "function_pointers.h"
+#include "ecs_handles.h"
 
 #include "systems/render_system.h"
 

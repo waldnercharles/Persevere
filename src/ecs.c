@@ -2,7 +2,7 @@
 #include "array.h"
 #include "log.h"
 
-#include "function_pointers.h"
+#include "ecs_handles.h"
 
 void *
 ecs__entity_get_data(struct ecs *ecs, u32 entity)

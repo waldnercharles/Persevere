@@ -170,7 +170,7 @@ fbo_enable(struct fbo *fbo)
     // fbo->viewport_size = vec2(viewport[2], viewport[3]);
 
     fbo->viewport_pos = vec2(0, 0);
-    fbo->viewport_size = vec2(256, 256);
+    fbo->viewport_size = fbo->size;
 
     glBindFramebuffer(GL_FRAMEBUFFER, fbo->handle);
 
@@ -214,7 +214,7 @@ void
 fbo_render(struct renderer *renderer, struct fbo *fbo)
 {
     glUseProgram(renderer->shader.fbo);
-    glBindVertexArray(renderer->vao.fbo);
+    glBindVertexArray(fbo->vao);
     glBindTexture(GL_TEXTURE_2D, fbo->texture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }

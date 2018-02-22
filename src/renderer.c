@@ -138,7 +138,7 @@ renderer_init(struct renderer *renderer, struct allocator *allocator)
         alloc(allocator, sizeof(struct sprite_renderer));
 
     // TODO: Do not hardcode the framebuffer size
-    fbo_init(renderer->fbo, 256, 256);
+    fbo_init(renderer->fbo, 512, 512);
 
     // We render 2d, no need for face-culling
     glDisable(GL_CULL_FACE);
@@ -261,7 +261,11 @@ renderer_render(struct renderer *renderer)
 {
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    fbo_enable(renderer->fbo);
     sprite_renderer_render(renderer->sprite_renderer);
+    fbo_disable(renderer->fbo);
+    fbo_render(renderer, renderer->fbo);
 
     // renderer_update_shadow_caster_buffer(renderer);
 

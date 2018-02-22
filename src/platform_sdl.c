@@ -92,8 +92,8 @@ main()
         SDL_CreateWindow("Persevere",
                          SDL_WINDOWPOS_UNDEFINED,
                          SDL_WINDOWPOS_UNDEFINED,
-                         480,
-                         480,
+                         512,
+                         512,
                          SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 
     platform->gl = SDL_GL_CreateContext(platform->window);

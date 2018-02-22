@@ -461,7 +461,7 @@ mat4_perspective(r32 fov_radians, r32 aspect, r32 near, r32 far)
 r32
 math_radians(r32 degrees)
 {
-    return degrees * (math_pi / 180.0f);
+    return degrees * (MATH_PI / 180.0f);
 }
 
 bool

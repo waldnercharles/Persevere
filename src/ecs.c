@@ -2,19 +2,21 @@
 #include "array.h"
 #include "log.h"
 
-static void *
+#include "function_pointers.h"
+
+void *
 ecs__entity_get_data(struct ecs *ecs, u32 entity)
 {
     return (void *)((u8 *)ecs->data + (ecs->data_width * entity));
 }
 
-static inline void
+void
 ecs__subscribe(struct ecs_system *system, u32 entity)
 {
     bitset_insert(&system->entities, entity);
 }
 
-static inline void
+void
 ecs__unsubscribe(struct ecs_system *system, u32 entity)
 {
     bitset_delete(&system->entities, entity);
@@ -38,7 +40,22 @@ ecs__check(struct ecs *ecs, struct ecs_system *system, u32 entity)
 }
 
 void
-ecs_init(struct ecs *ecs)
+ecs_init(struct ecs *ecs, struct allocator *allocator)
+{
+    ecs->allocator = allocator;
+    sparse_set_init(&ecs->added_entities, ecs->allocator);
+    sparse_set_init(&ecs->enabled_entities, ecs->allocator);
+    sparse_set_init(&ecs->deleted_entities, ecs->allocator);
+    sparse_set_init(&ecs->disabled_entities, ecs->allocator);
+    sparse_set_init(&ecs->dirty_entities, ecs->allocator);
+
+    sparse_set_init(&ecs->free_entities, ecs->allocator);
+
+    bitset_init(&ecs->active_entities, ecs->allocator);
+}
+
+void
+ecs_finalize(struct ecs *ecs)
 {
     struct ecs_component *component;
     u32 component_bytes = bitset_nslots(ecs->num_components);
@@ -50,6 +67,7 @@ ecs_init(struct ecs *ecs)
     }
 
     ecs->data = array__init(ecs->allocator, 0, ecs->data_width);
+
     ecs->initialized = 1;
 }
 
@@ -110,28 +128,31 @@ ecs_process(struct ecs *ecs, void *u_data, r32 dt)
     // systems
     array_for_each (system, ecs->systems)
     {
-        if (system->process_begin)
+        if (ecs_system_functions[system->id].process_begin != NULL)
         {
-            system->process_begin(ecs, u_data);
+            ecs_system_functions[system->id].process_begin(ecs, u_data);
         }
 
         bitset_for_each (i, &(system->entities))
         {
-            system->process(ecs, u_data, i, dt);
+            ecs_system_functions[system->id].process(ecs, u_data, i, dt);
         }
 
-        if (system->process_end)
+        if (ecs_system_functions[system->id].process_end != NULL)
         {
-            system->process_end(ecs, u_data);
+            ecs_system_functions[system->id].process_end(ecs, u_data);
         }
     }
 }
 
 // component
 void
-ecs_create_component(struct ecs *ecs, char *name, u32 size, u32 *component_ptr)
+ecs_register_component(struct ecs *ecs, char *name, u32 size, u32 id)
 {
-    struct ecs_component c;
+    struct ecs_component tmp, c = { 0 };
+    bool registered;
+
+    c.id = id;
     c.name = name;
     c.size = size;
     c.offset = ecs->data_width;
@@ -143,28 +164,40 @@ ecs_create_component(struct ecs *ecs, char *name, u32 size, u32 *component_ptr)
         array_init(ecs->components, ecs->allocator);
     }
 
-    array_push(ecs->components, c);
-    *component_ptr = ++(ecs->num_components) - 1;
+    array__grow_to(ecs->components, id + 1);
+    tmp = ecs->components[id];
+
+    registered = tmp.id == c.id && tmp.size == c.size &&
+                 tmp.offset == c.offset && tmp.name != NULL &&
+                 strcmp(tmp.name, c.name) == 0;
+
+    if (registered)
+    {
+        log_warning("Component (%s, %i) already registered.", c.name, c.id);
+        return;
+    }
+    else
+    {
+        log_debug("Registering component (%s, %i).", c.name, c.id);
+        ecs->components[id] = c;
+        ++(array__len(ecs->components));
+        ++(ecs->num_components);
+    }
 }
 
 // system
 void
-ecs_create_system(struct ecs *ecs,
-                  char *name,
-                  void (*process_begin)(struct ecs *, void *),
-                  void (*process)(struct ecs *, void *, u32, r32),
-                  void (*process_end)(struct ecs *, void *),
-                  u32 *system_ptr)
+ecs_register_system(struct ecs *ecs, char *name, u32 id)
 {
-    struct ecs_system s;
+    struct ecs_system tmp, s = { 0 };
+    bool registered;
 
+    bitset_init(&s.entities, ecs->allocator);
+
+    s.id = id;
+    s.name = name;
     s.entities.bytes = NULL;
     s.entities.capacity = 0;
-
-    s.name = name;
-    s.process = process;
-    s.process_begin = process_begin;
-    s.process_end = process_end;
 
     array_init(s.watched_components, ecs->allocator);
 
@@ -173,8 +206,23 @@ ecs_create_system(struct ecs *ecs,
         array_init(ecs->systems, ecs->allocator);
     }
 
-    array_push(ecs->systems, s);
-    *system_ptr = ++(ecs->num_systems) - 1;
+    array__grow_to(ecs->systems, id + 1);
+    tmp = ecs->systems[id];
+
+    registered =
+        tmp.id == s.id && tmp.name != NULL && strcmp(tmp.name, s.name) == 0;
+
+    if (registered)
+    {
+        log_warning("System (%s, %i) already registered", s.name, s.id);
+    }
+    else
+    {
+        log_debug("Registering system (%s, %i)", s.name, s.id);
+        ecs->systems[id] = s;
+        ++(array__len(ecs->systems));
+        ++(ecs->num_systems);
+    }
 }
 
 void
@@ -191,7 +239,7 @@ ecs_process_system(struct ecs *ecs, u32 system, void *u_data, r32 dt)
 
     bitset_for_each (entity, &s->entities)
     {
-        s->process(ecs, u_data, entity, dt);
+        ecs_system_functions[s->id].process(ecs, u_data, entity, dt);
     }
 }
 

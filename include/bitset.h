@@ -1,13 +1,17 @@
 #ifndef BITSET_H
 #define BITSET_H
 #include "std.h"
+#include "allocators/allocator.h"
 
 struct bitset
 {
     u8 *bytes;
     u32 capacity;
+
+    struct allocator *allocator;
 };
 
+void bitset_init(struct bitset *bitset, struct allocator *allocator);
 u32 bitset_mask(u32 b);
 u32 bitset_slot(u32 b);
 u32 bitset_nslots(u32 b);

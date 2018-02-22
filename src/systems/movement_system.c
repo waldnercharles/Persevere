@@ -6,13 +6,14 @@
 void
 movement_system_process(struct ecs *ecs, void *u_data, u32 entity, r32 dt)
 {
-    struct engine *engine;
-    struct component_handles components;
+    (void)u_data;
+    // struct engine *engine;
+    struct ecs_component_handles components;
     struct movement *movement;
     struct body *body;
 
-    engine = u_data;
-    components = engine->component_handles;
+    // engine = u_data;
+    components = ecs_component_handles;
 
     ecs_get_component(ecs, entity, components.body, (void **)&body);
     ecs_get_component(ecs, entity, components.movement, (void **)&movement);

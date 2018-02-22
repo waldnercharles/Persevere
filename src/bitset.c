@@ -14,16 +14,29 @@ bool bitset_test(u8 *bytes, u32 b) { return bytes[bitset_slot(b)] & bitset_mask(
 // clang-format on
 
 void
+bitset_init(struct bitset *bitset, struct allocator *allocator)
+{
+    bitset->allocator = allocator;
+}
+
+void
 bitset_insert(struct bitset *bitset, u32 value)
 {
     u32 old_size, new_size, new_capacity;
+    u8 *tmp;
+
     if (value >= bitset->capacity)
     {
         new_capacity = (value + 1) * 2;
         old_size = bitset_nslots(bitset->capacity);
         new_size = bitset_nslots(new_capacity);
 
-        bitset->bytes = realloc(bitset->bytes, new_size);
+        tmp = bitset->bytes;
+        bitset->bytes = alloc(bitset->allocator, new_size);
+        memcpy(bitset->bytes, tmp, sizeof(u8) * old_size);
+        dealloc(bitset->allocator, tmp);
+
+        // bitset->bytes = realloc(bitset->bytes, new_size);
         memset(bitset->bytes + old_size, 0, new_size - old_size);
 
         bitset->capacity = new_capacity;

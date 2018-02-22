@@ -1,19 +1,35 @@
 #include "sparse_set.h"
 
 void
+sparse_set_init(struct sparse_set *s, struct allocator *allocator)
+{
+    s->allocator = allocator;
+}
+
+void
 sparse_set_insert(struct sparse_set *s, u32 value)
 {
-    u32 dbl_cap, index, n, new_size;
+    u32 dbl_cap, index, n;  //, new_size;
+    u32 *tmp;
+
     if (value >= s->capacity)
     {
         dbl_cap = (value + 1) * 2;
-        s->sparse = realloc(s->sparse, sizeof(u32) * dbl_cap);
-        s->dense = realloc(s->dense, sizeof(u32) * dbl_cap);
 
-        new_size = (dbl_cap - s->capacity) * sizeof(u32);
+        tmp = s->sparse;
+        s->sparse = alloc(s->allocator, sizeof(u32) * dbl_cap);
+        memcpy(s->sparse, tmp, sizeof(u32) * s->capacity);
+        dealloc(s->allocator, tmp);
 
-        memset(s->sparse + s->capacity, 0, new_size);
-        memset(s->dense + s->capacity, 0, new_size);
+        tmp = s->dense;
+        s->dense = alloc(s->allocator, sizeof(u32) * dbl_cap);
+        memcpy(s->dense, tmp, sizeof(u32) * s->capacity);
+        dealloc(s->allocator, tmp);
+
+        // new_size = (dbl_cap - s->capacity) * sizeof(u32);
+
+        // memset(s->sparse + s->capacity, 0, new_size);
+        // memset(s->dense + s->capacity, 0, new_size);
 
         s->capacity = dbl_cap;
     }

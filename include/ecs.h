@@ -21,16 +21,15 @@ enum ecs_state
 
 struct ecs_system
 {
+    u32 id;
     const char *name;
-    void (*process_begin)(struct ecs *ecs, void *u_data);
-    void (*process)(struct ecs *ecs, void *u_data, u32 entity, r32 dt);
-    void (*process_end)(struct ecs *ecs, void *u_data);
     u32 *watched_components;
     struct bitset entities;
 };
 
 struct ecs_component
 {
+    u32 id;
     const char *name;
     u32 size;
     u32 offset;
@@ -65,22 +64,16 @@ struct ecs
 };
 
 // ecs
-void ecs_init(struct ecs *ecs);
+void ecs_init(struct ecs *ecs, struct allocator *allocator);
+
+void ecs_finalize(struct ecs *ecs);
 void ecs_process(struct ecs *ecs, void *u_data, r32 dt);
 
 // component
-void ecs_create_component(struct ecs *ecs,
-                          char *name,
-                          u32 size,
-                          u32 *component_ptr);
+void ecs_register_component(struct ecs *ecs, char *name, u32 size, u32 component);
 
 // system
-void ecs_create_system(struct ecs *ecs,
-                       char *name,
-                       void (*process_begin)(struct ecs *, void *),
-                       void (*process)(struct ecs *, void *, u32, r32),
-                       void (*process_end)(struct ecs *, void *),
-                       u32 *system_ptr);
+void ecs_register_system(struct ecs *ecs, char *name, u32 system);
 
 void ecs_watch(struct ecs *e, u32 system, u32 component);
 void ecs_process_system(struct ecs *ecs, u32 system, void *u_data, r32 dt);

@@ -25,14 +25,4 @@
         "-isystem",
         "c:/msys64/mingw32/include"
     ],
-    "emeraldwalk.runonsave": {
-        "autoClearConsole": true,
-        "commands": [
-            {
-                "match": ".*",
-                "isAsync": false,
-                "cmd": "cd ${workspaceFolder} && make -j3"
-            }
-        ]
-    }
 }

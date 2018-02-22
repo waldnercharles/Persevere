@@ -13,20 +13,6 @@
 
 #define MAX_CONTROLLERS 4
 
-struct component_handles
-{
-    u32 body;
-    u32 movement;
-    u32 render;
-    u32 spritesheet;
-};
-
-struct system_handles
-{
-    u32 movement;
-    u32 render;
-};
-
 struct controller
 {
     void *controller;
@@ -38,9 +24,6 @@ struct controller
 struct engine
 {
     struct platform *platform;
-
-    struct component_handles component_handles;
-    struct system_handles system_handles;
 
     struct ecs *ecs;
     struct mixer *mixer;

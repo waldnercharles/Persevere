@@ -3,6 +3,9 @@
 #include "array.h"
 #include "vec.h"
 #include "renderer.h"
+#include "renderers/sprite_renderer.h"
+
+#include "function_pointers.h"
 
 #include "systems/render_system.h"
 
@@ -13,70 +16,56 @@ void
 render_system_process_begin(struct ecs *ecs, void *u_data)
 {
     struct engine *engine;
+    struct sprite_renderer *sprite_renderer;
     unused(ecs);
 
     engine = u_data;
-    array__len(engine->renderer->sprites) = 0;
-    array__len(engine->renderer->states) = 0;
+    sprite_renderer = engine->renderer->sprite_renderer;
+
+    array__len(sprite_renderer->sprites) = 0;
+    array__len(sprite_renderer->shaders) = 0;
+    array__len(sprite_renderer->textures) = 0;
 }
 
 void
 render_system_process(struct ecs *ecs, void *u_data, u32 entity, r32 dt)
 {
     u32 body_component, render_component;
-    struct engine *engine;
     struct body *body;
     struct render *render;
 
-    struct renderer_sprite sprite;
-    struct renderer_state state;
+    struct sprite_vertex sprite;
+
+    struct engine *engine;
+    struct sprite_renderer *sprite_renderer;
     unused(dt);
 
     engine = u_data;
-    body_component = engine->component_handles.body;
-    render_component = engine->component_handles.render;
+    sprite_renderer = engine->renderer->sprite_renderer;
+
+    body_component = ecs_component_handles.body;
+    render_component = ecs_component_handles.render;
 
     ecs_get_component(ecs, entity, body_component, (void **)&body);
     ecs_get_component(ecs, entity, render_component, (void **)&render);
 
     sprite.pos = body->pos;
     sprite.size = body->size;
-    sprite.theta = body->theta;
+    // sprite.theta = body->theta;
     sprite.uv = render->uv_offset;
 
-    state.shader = render->shader;
-    state.texture = render->texture;
-
-    array_push(engine->renderer->sprites, sprite);
-    array_push(engine->renderer->states, state);
+    array_push(sprite_renderer->sprites, sprite);
+    array_push(sprite_renderer->shaders, render->shader);
+    array_push(sprite_renderer->textures, render->texture);
 }
 
 void
 render_system_process_end(struct ecs *ecs, void *u_data)
 {
-    static u32 *temp = NULL;
     struct engine *engine;
-    u32 len, i;
-
-    if (temp == NULL)
-    {
-        array_init(temp, ecs->allocator);
-    }
-
     engine = u_data;
 
     renderer_render(engine->renderer);
-
-    len = array_count(engine->renderer->sprites);
-
-    array_set_cap(temp, len);
-    for (i = 0; i < len; ++i)
-    {
-        temp[i] = i;
-    }
-
-    // TODO: Sort temp by sprites[temp] and states[temp]
-    // TODO: Re-order sprites and states according to temp order.
 
     (void)ecs;
 }

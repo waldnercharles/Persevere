@@ -36,6 +36,7 @@ struct array
 #define array__grow_required(a,n)     ((a)==NULL || array__len(a)+(n) >= array__cap(a))
 #define array__grow(a,n)              ((a)=array__grow_internal((a),(n)))
 #define array__grow_if_required(a,n)  (array__grow_required(a,n) ? array__grow(a,n) : 0)
+#define array__grow_to(a,cap)         (cap > array__cap(a) ? array__grow(a,cap-array__cap(a)) : 0)
 
 #define array_for_each(v,a)  for((v)=(a); (v)<(a)+array__len(a); ++(v))
 // clang-format on

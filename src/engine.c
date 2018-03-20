@@ -103,7 +103,6 @@ engine_renderer_init(struct engine *engine)
     struct renderer *renderer;
 
     u32 *basic_frag, *basic_vert;
-    u32 *light_frag, *light_vert;
     u32 *fbo_frag, *fbo_vert;
 
     if (engine->assets == NULL)
@@ -116,15 +115,11 @@ engine_renderer_init(struct engine *engine)
     renderer =
         alloc(engine->platform->memory->permanent, sizeof(struct renderer));
 
-    renderer_init(renderer, engine->platform->memory->permanent);
+    renderer_init(renderer, engine, engine->platform->memory->permanent);
 
     basic_frag = asset_get(engine->assets, "assets/basic.frag");
     basic_vert = asset_get(engine->assets, "assets/basic.vert");
     renderer->shader.basic = shader_program_link(*basic_frag, *basic_vert);
-
-    light_frag = asset_get(engine->assets, "assets/light.frag");
-    light_vert = asset_get(engine->assets, "assets/light.vert");
-    renderer->shader.light = shader_program_link(*light_frag, *light_vert);
 
     fbo_frag = asset_get(engine->assets, "assets/fbo.frag");
     fbo_vert = asset_get(engine->assets, "assets/fbo.vert");

@@ -1,12 +1,11 @@
-#ifndef BODY_COMPONENT_H
-#define BODY_COMPONENT_H
+#ifndef QUAD_COMPONENT_H
+#define QUAD_COMPONENT_H
 
 #include "std.h"
 #include "vec.h"
 
-struct body
+struct quad
 {
-    v2 pos;
     v2 size;
     r32 theta;
 };

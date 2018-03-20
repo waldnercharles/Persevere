@@ -3,28 +3,19 @@
 
 #include "std.h"
 #include "vec.h"
+
 #include "allocators/allocator.h"
 
 #include "renderers/sprite_renderer.h"
+#include "renderers/light_renderer.h"
+#include "renderers/shadowcaster_renderer.h"
+
+struct engine;
 
 struct renderer_basic
 {
     v2 pos;
     v3 color;
-};
-
-struct renderer_sprite
-{
-    v2 pos;
-    v2 size;
-    // r32 theta;
-    v2 uv;
-};
-
-struct renderer_state
-{
-    u32 texture;
-    u32 shader;
 };
 
 struct renderer_texture
@@ -36,19 +27,12 @@ struct renderer_texture
     const char *filename;
 };
 
-struct renderer_spritesheet
-{
-    struct renderer_texture *texture;
-    u32 tile_width;
-    u32 tile_height;
-};
-
 struct renderer_vaos
 {
     u32 fbo;
     u32 geometry;
     u32 light;
-    u32 shadow_caster;
+    u32 shadowcaster;
     u32 shadow_geometry;
 };
 
@@ -58,7 +42,7 @@ struct renderer_vbos
     u32 quad;
     u32 sprite;
     u32 light;
-    u32 shadow_caster;
+    u32 shadowcaster;
     u32 shadow_geometry;
 };
 
@@ -75,13 +59,18 @@ struct renderer
     struct fbo *fbo;
 
     struct sprite_renderer *sprite_renderer;
+    struct light_renderer *light_renderer;
+    struct shadowcaster_renderer *shadowcaster_renderer;
 
     struct renderer_vaos vao;
     struct renderer_vbos vbo;
     struct renderer_shaders shader;
 };
 
-void renderer_init(struct renderer *renderer, struct allocator *allocator);
+void renderer_init(struct renderer *renderer,
+                   struct engine *engine,
+                   struct allocator *allocator);
+
 void renderer_render(struct renderer *renderer);
 
 void renderer_create_texture(struct renderer *renderer,

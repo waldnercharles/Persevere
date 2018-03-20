@@ -1,8 +1,10 @@
 #include "ecs.h"
+
 #include "array.h"
 #include "log.h"
 
-#include "ecs_handles.h"
+#include "systems.h"
+#include "components.h"
 
 void *
 ecs__entity_get_data(struct ecs *ecs, u32 entity)
@@ -128,19 +130,19 @@ ecs_process(struct ecs *ecs, void *u_data, r32 dt)
     // systems
     array_for_each (system, ecs->systems)
     {
-        if (ecs_system_functions[system->id].process_begin != NULL)
+        if (system_functions[system->id].process_begin != NULL)
         {
-            ecs_system_functions[system->id].process_begin(ecs, u_data);
+            system_functions[system->id].process_begin(ecs, u_data);
         }
 
         bitset_for_each (i, &(system->entities))
         {
-            ecs_system_functions[system->id].process(ecs, u_data, i, dt);
+            system_functions[system->id].process(ecs, u_data, i, dt);
         }
 
-        if (ecs_system_functions[system->id].process_end != NULL)
+        if (system_functions[system->id].process_end != NULL)
         {
-            ecs_system_functions[system->id].process_end(ecs, u_data);
+            system_functions[system->id].process_end(ecs, u_data);
         }
     }
 }
@@ -239,7 +241,7 @@ ecs_process_system(struct ecs *ecs, u32 system, void *u_data, r32 dt)
 
     bitset_for_each (entity, &s->entities)
     {
-        ecs_system_functions[s->id].process(ecs, u_data, entity, dt);
+        system_functions[s->id].process(ecs, u_data, entity, dt);
     }
 }
 

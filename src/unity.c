@@ -17,16 +17,15 @@
 
 #include "renderer.c"
 #include "renderers/sprite_renderer.c"
+#include "renderers/light_renderer.c"
+#include "renderers/shadowcaster_renderer.c"
 
 #include "asset.c"
 #include "assets/texture_asset.c"
 #include "assets/shader_asset.c"
 #include "assets/sound_asset.c"
 
-#include "components/body_component.h"
-#include "components/movement_component.h"
-#include "components/render_component.h"
-#include "components/light_component.h"
-
 #include "systems/movement_system.c"
-#include "systems/render_system.c"
+#include "systems/sprite_system.c"
+#include "systems/light_system.c"
+#include "systems/shadowcaster_system.c"

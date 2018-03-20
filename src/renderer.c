@@ -6,10 +6,10 @@
 #include "stb_image.h"
 
 void
-renderer_init_shadow_caster_buffer(struct renderer *renderer)
+renderer_init_shadowcaster_buffer(struct renderer *renderer)
 {
-    glGenBuffers(1, &(renderer->vbo.shadow_caster));
-    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo.shadow_caster);
+    glGenBuffers(1, &(renderer->vbo.shadowcaster));
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo.shadowcaster);
 
     glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_STATIC_DRAW);
 
@@ -17,20 +17,20 @@ renderer_init_shadow_caster_buffer(struct renderer *renderer)
 }
 
 void
-renderer_update_shadow_caster_buffer(struct renderer *renderer)
+renderer_update_shadowcaster_buffer(struct renderer *renderer)
 {
     static const struct renderer_basic triangle[] = {
         {
-            .pos = {.x = -0.5f, .y = 0.5f },
-            .color = {.r = 1.0f, .g = 0.0f, .b = 0.0f },
+            .pos = { .x = -0.5f, .y = 0.5f },
+            .color = { .r = 1.0f, .g = 0.0f, .b = 0.0f },
         },
         {
-            .pos = {.x = -0.5f, .y = -0.5f },
-            .color = {.r = 1.0f, .g = 0.0f, .b = 0.0f },
+            .pos = { .x = -0.5f, .y = -0.5f },
+            .color = { .r = 1.0f, .g = 0.0f, .b = 0.0f },
         },
         {
-            .pos = {.x = 0.5f, .y = -0.5f },
-            .color = {.r = 1.0f, .g = 0.0f, .b = 0.0f },
+            .pos = { .x = 0.5f, .y = -0.5f },
+            .color = { .r = 1.0f, .g = 0.0f, .b = 0.0f },
         },
     };
 
@@ -38,7 +38,7 @@ renderer_update_shadow_caster_buffer(struct renderer *renderer)
     //     -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
     // };
 
-    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo.shadow_caster);
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo.shadowcaster);
     glBufferData(GL_ARRAY_BUFFER, sizeof(triangle), triangle, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -110,15 +110,15 @@ renderer_init_light_vao(struct renderer *renderer)
 }
 
 void
-renderer_init_shadow_caster_vao(struct renderer *renderer)
+renderer_init_shadowcaster_vao(struct renderer *renderer)
 {
     u32 size = sizeof(struct renderer_basic);
     u32 pos_offset = offsetof(struct renderer_basic, pos);
     u32 color_offset = offsetof(struct renderer_basic, color);
 
-    glGenVertexArrays(1, &(renderer->vao.shadow_caster));
-    glBindVertexArray(renderer->vao.shadow_caster);
-    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo.shadow_caster);
+    glGenVertexArrays(1, &(renderer->vao.shadowcaster));
+    glBindVertexArray(renderer->vao.shadowcaster);
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo.shadowcaster);
 
     glVertexAttribPointer(0, 2, GL_FLOAT, 0, size, (void *)pos_offset);
     glVertexAttribPointer(1, 3, GL_FLOAT, 0, size, (void *)color_offset);
@@ -131,11 +131,19 @@ renderer_init_shadow_caster_vao(struct renderer *renderer)
 }
 
 void
-renderer_init(struct renderer *renderer, struct allocator *allocator)
+renderer_init(struct renderer *renderer,
+              struct engine *engine,
+              struct allocator *allocator)
 {
     renderer->fbo = alloc(allocator, sizeof(struct fbo));
+
     renderer->sprite_renderer =
         alloc(allocator, sizeof(struct sprite_renderer));
+
+    renderer->shadowcaster_renderer =
+        alloc(allocator, sizeof(struct shadowcaster_renderer));
+
+    renderer->light_renderer = alloc(allocator, sizeof(struct light_renderer));
 
     // TODO: Do not hardcode the framebuffer size
     fbo_init(renderer->fbo, 512, 512);
@@ -147,83 +155,189 @@ renderer_init(struct renderer *renderer, struct allocator *allocator)
 
     // renderer_fbo_init(renderer);
     sprite_renderer_init(renderer->sprite_renderer, allocator);
+    light_renderer_init(renderer->light_renderer, engine, allocator);
+
+    shadowcaster_renderer_init(engine,
+                               renderer->shadowcaster_renderer,
+                               allocator);
 
     renderer_init_light_buffer(renderer);
-    renderer_init_shadow_caster_buffer(renderer);
+    renderer_init_shadowcaster_buffer(renderer);
 
     renderer_init_light_vao(renderer);
-    renderer_init_shadow_caster_vao(renderer);
+    renderer_init_shadowcaster_vao(renderer);
 }
 
-// struct shadowfin
-// {
-//     v2 pos;
+struct shadowfin
+{
+    u32 index;
 
-//     v2 outer;
-//     v2 inner;
+    v2 pos;
 
-//     r32 outer_intensity;
-//     r32 inner_intensity;
-//     r32 depth;
-// };
+    v2 outer;
+    v2 inner;
 
-// struct shadowfin
-// shadowfin_init(struct light light, v2 pos)
-// {
-//     (void)light;
-//     struct shadowfin fin = { 0 };
+    r32 outer_intensity;
+    r32 inner_intensity;
+    r32 depth;
+};
 
-//     fin.pos = pos;
-//     fin.outer_intensity = 1.0f;
-//     fin.inner_intensity = 0.0f;
-//     fin.depth = 0.0f;
+struct shadowfin
+create_shadowfin(v2 pos)
+{
+    return (struct shadowfin){
+        .pos = pos,
+        .outer = vec2(0.0f, 0.0f),
+        .inner = vec2(0.0f, 0.0f),
+        .outer_intensity = 1.0f,
+        .inner_intensity = 0.0f,
+        .depth = 0.0f,
+        .index = 0,
+    };
+}
 
-//     return fin;
-// }
+v2
+get_shadow_vector(v2 pos, r32 radius, v2 edge, s32 step, bool inner)
+{
+    v2 center;
+    v2 perp;
+    bool invert;
+    r32 rotate_direction;
 
-// void
-// create_shadowfins(v2 points[], u32 start_idx, s32 direction)
-// {
-//     u32 i;
-//     v2 p0, p1;
-//     v2 edge;
+    invert = false;
+    if (pos.x < edge.x)
+    {
+        invert = true;
+    }
 
-//     struct shadowfin shadowfin;
-//     r32 angle;
+    rotate_direction = inner ? -1.0f : 1.0f;
 
-//     i = start_idx;
+    perp = vec2_sub(pos, edge);
+    perp = vec2_norm(perp);
+    if (step == 1)
+    {
+        if (invert)
+        {
+            perp = vec2_mul(perp, -radius);
+            perp = vec2_rotate(perp, MATH_PI * 0.5f * rotate_direction);
+        }
+        else
+        {
+            perp = vec2_mul(perp, radius);
+            perp = vec2_rotate(perp, -MATH_PI * 0.5f * rotate_direction);
+        }
+    }
+    else
+    {
+        if (invert)
+        {
+            perp = vec2_mul(perp, -radius);
+            perp = vec2_rotate(perp, -MATH_PI * 0.5f * rotate_direction);
+        }
+        else
+        {
+            perp = vec2_mul(perp, radius);
+            perp = vec2_rotate(perp, MATH_PI * 0.5f * rotate_direction);
+        }
+    }
 
-//     while (true)
-//     {
-//         p1 = points[i];
-//         i = (i - step + 3) % 3;
-//         p0 = points[0];
+    center = vec2_mul(vec2_sub(vec2_add(pos, perp), edge), -1);
+    center = vec2_norm(center);
 
-//         edge = vec2_sub(p1, p0);
-//         edge = vec2_norm(edge);
+    return vec2_mul(center, radius * 10.0f);
+}
 
-//         penumbra = create_shadowfin(p0);
-//         angle = atan2f(edge.y, edge.x) -
-//     }
-// }
+v2
+get_outer_vector(v2 pos, r32 radius, v2 edge, s32 step)
+{
+    return get_shadow_vector(pos, radius, edge, step, false);
+}
+
+v2
+get_inner_vector(v2 pos, r32 radius, v2 edge, s32 step)
+{
+    return get_shadow_vector(pos, radius, edge, step, true);
+}
+
+void
+create_shadowfins(v2 points[],
+                  struct light_vertex light,
+                  u32 start_idx,
+                  s32 step,
+                  struct shadowfin *shadowfins)
+{
+    u32 i;
+    v2 p0, p1;
+    v2 edge;
+
+    struct shadowfin shadowfin;
+    v2 outer, inner;
+    r32 angle;
+
+    i = start_idx;
+
+    while (true)
+    {
+        p1 = points[i];
+
+        i = (i - step + 3) % 4;
+
+        p0 = points[i];
+
+        edge = vec2_sub(p1, p0);
+        edge = vec2_norm(edge);
+
+        shadowfin = create_shadowfin(p0);
+        shadowfin.index = i;
+
+        outer = get_outer_vector(light.pos, 0.1f, p0, step);
+        inner = get_inner_vector(light.pos, 0.1f, p0, step);
+
+        angle = atan2f(edge.y, edge.x) - atan2f(outer.y, outer.x);
+
+        if (step == 1)
+        {
+            if (angle < 0 || angle > MATH_PI * 0.5f)
+            {
+                break;
+            }
+        }
+        else if (step == -1)
+        {
+            if (angle > MATH_PI)
+            {
+                angle -= MATH_PI * 2.0f;
+            }
+            if (angle > 0 || angle < -MATH_PI * 0.5f)
+            {
+                break;
+            }
+        }
+
+        shadowfin.outer = outer;
+        shadowfin.inner = vec2_mul(edge, vec2_mag(inner));
+
+        array_push(shadowfins, shadowfin);
+    }
+}
 
 void
 render_shadows(v2 points[], v2 light_pos)
 {
     u32 i;
     u32 curr_idx, prev_idx;
-    s32 first_idx, last_idx;
+    s32 start_idx, end_idx;
 
     v2 curr, prev;
     v2 normal_vector, light_vector;
     bool prev_frontfacing = false;
 
-    first_idx = last_idx = -1;
+    start_idx = end_idx = -1;
 
-    for (i = 0; i < 3; i++)
+    for (i = 0; i < 4; ++i)
     {
-        curr_idx = i;
-        prev_idx = (i + 2) % 3;
+        prev_idx = i;
+        curr_idx = (i + 1) % 4;
 
         curr = points[curr_idx];
         prev = points[prev_idx];
@@ -231,12 +345,12 @@ render_shadows(v2 points[], v2 light_pos)
         normal_vector = vec2(-(curr.y - prev.y), curr.x - prev.x);
         light_vector = vec2(curr.x - light_pos.x, curr.y - light_pos.y);
 
-        // Check if front-facing
+        // Check if facing light
         if (vec2_dot(normal_vector, light_vector) > 0)
         {
             if (!prev_frontfacing)
             {
-                last_idx = prev_idx;
+                end_idx = prev_idx;
             }
             prev_frontfacing = true;
         }
@@ -244,13 +358,13 @@ render_shadows(v2 points[], v2 light_pos)
         {
             if (prev_frontfacing)
             {
-                first_idx = prev_idx;
+                start_idx = prev_idx;
             }
             prev_frontfacing = false;
         }
     }
 
-    if (first_idx == -1 || last_idx == -1)
+    if (start_idx == -1 || end_idx == -1)
     {
         return;
     }
@@ -265,116 +379,6 @@ renderer_render(struct renderer *renderer)
     fbo_enable(renderer->fbo);
     sprite_renderer_render(renderer->sprite_renderer);
     fbo_disable(renderer->fbo);
+
     fbo_render(renderer, renderer->fbo);
-
-    // renderer_update_shadow_caster_buffer(renderer);
-
-    // // TODO: Get Matrices
-
-    // fbo_enable(renderer->fbo);
-
-    // glDepthFunc(GL_LEQUAL);
-    // glClearDepth(1.0f);
-
-    // glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
-    // GL_STENCIL_BUFFER_BIT);
-
-    // glBindTexture(GL_TEXTURE_2D, 0);
-
-    // // Fill z-buffer
-    // {
-    //     glEnable(GL_DEPTH_TEST);
-    //     glDepthMask(true);
-    //     glColorMask(0, 0, 0, 0);
-
-    //     glBindVertexArray(renderer->vao.shadow_caster);
-    //     glUseProgram(renderer->shader.basic);
-    //     glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    //     glDepthMask(false);
-    //     glDisable(GL_DEPTH_TEST);
-    // }
-
-    // // TODO: For each light!
-    // {
-    //     r32 light_radius = 2.0f;
-    //     v2 light_pos, light_size;
-    //     v3 light_color;
-
-    //     light_pos = vec2(0.3f, 0.6f);
-    //     light_size = vec2(light_radius, light_radius);
-    //     light_color = vec3(1.0f, 1.0f, 1.0f);
-
-    //     // TODO: Update this with params from light
-    //     renderer_update_light_buffer(renderer,
-    //                                  light_pos,
-    //                                  light_size,
-    //                                  light_color,
-    //                                  1.0f);
-
-    //     // Clear framebuffer alpha
-    //     {
-    //         glColorMask(0, 0, 0, 1);
-    //         glClear(GL_COLOR_BUFFER_BIT);
-    //     }
-
-    //     // Write framebuffer alpha
-    //     {
-    //         glEnable(GL_DEPTH_TEST);
-    //         glDepthFunc(GL_LEQUAL);
-    //         glDisable(GL_BLEND);
-    //         glColorMask(1, 1, 1, 1);
-
-    //         glBindVertexArray(renderer->vao.light);
-    //         glUseProgram(renderer->shader.light);
-    //         // TODO: This is kind of weird. Remove instanced rendering here
-    //         glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 1);
-
-    //         glEnable(GL_BLEND);
-    //         glBlendFunc(GL_DST_ALPHA, GL_ZERO);
-
-    //         // TODO: For every shadow caster, create shadow geometry
-    //         v2 points[] = { vec2(-0.5f, +0.5f),
-    //                         vec2(-0.5f, -0.5f),
-    //                         vec2(+0.5f, -0.5f) };
-    //         (void)points;
-
-    //         // render_shadows(points, light_pos);
-
-    //         glDisable(GL_DEPTH_TEST);
-    //     }
-
-    //     // Draw Geometry
-    //     {
-    //         glEnable(GL_DEPTH_TEST);
-    //         glEnable(GL_BLEND);
-    //         glBlendFunc(GL_DST_ALPHA, GL_ONE);
-    //         glColorMask(1, 1, 1, 0);
-
-    //         // u32 len = array_count(renderer->sprites);
-    //         // glBindVertexArray(renderer->vao.geometry);
-    //         // glActiveTexture(GL_TEXTURE0);
-    //         // glBindTexture(GL_TEXTURE_2D, renderer->states[0].texture);
-
-    //         // glUseProgram(renderer->states[0].shader);
-    //         // glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, len);
-
-    //         glBindVertexArray(renderer->vao.light);
-    //         glUseProgram(renderer->shader.light);
-    //         glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 1);
-
-    //         glBindVertexArray(renderer->vao.shadow_caster);
-    //         glUseProgram(renderer->shader.basic);
-    //         glDrawArrays(GL_TRIANGLES, 0, 3);
-    //     }
-    // }
-
-    // fbo_disable(renderer->fbo);
-
-    // glDisable(GL_DEPTH_TEST);
-    // glDisable(GL_BLEND);
-
-    // // TODO: Render the fbo
-    // fbo_render(renderer, renderer->fbo);
 }

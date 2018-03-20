@@ -3,35 +3,33 @@
 #include "log.h"
 
 static void
-sprite_init_quad_vbo(struct sprite_renderer *r)
+sprite_renderer__init_quad_vbo(struct sprite_renderer *renderer)
 {
     v2 quad[] = {
-        {.x = 0.0f, .y = 1.0f },
-        {.x = 0.0f, .y = 0.0f },
-        {.x = 1.0f, .y = 1.0f },
-        {.x = 1.0f, .y = 0.0f },
+        { .x = 0.0f, .y = 1.0f },
+        { .x = 0.0f, .y = 0.0f },
+        { .x = 1.0f, .y = 1.0f },
+        { .x = 1.0f, .y = 0.0f },
     };
-    glGenBuffers(1, &r->quad_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, r->quad_vbo);
+    glGenBuffers(1, &renderer->quad_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->quad_vbo);
 
     glBufferData(GL_ARRAY_BUFFER, sizeof(quad), quad, GL_STATIC_DRAW);
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 static void
-sprite_init_sprite_vbo(struct sprite_renderer *r)
+sprite_renderer__init_sprite_vbo(struct sprite_renderer *renderer)
 {
-    glGenBuffers(1, &r->sprite_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, r->sprite_vbo);
+    glGenBuffers(1, &renderer->sprite_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->sprite_vbo);
 
     glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_STREAM_DRAW);
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 static void
-sprite_init_vao(struct sprite_renderer *r)
+sprite_renderer__init_vao(struct sprite_renderer *r)
 {
     static const u32 size = sizeof(struct sprite_vertex);
     static const u32 pos_offset = offsetof(struct sprite_vertex, pos);
@@ -70,18 +68,21 @@ sprite_init_vao(struct sprite_renderer *r)
 }
 
 static void
-sprite_render_length(struct sprite_renderer *r, u32 start, u32 len)
+sprite_render_length(struct sprite_renderer *renderer, u32 start, u32 len)
 {
     u32 cap, texture, shader;
     static const u32 sprite_size = sizeof(struct sprite_vertex);
 
-    cap = array__cap(r->sprites);
+    cap = array__cap(renderer->sprites);
 
-    texture = r->textures[start];
-    shader = r->shaders[start];
+    texture = renderer->textures[start];
+    shader = renderer->shaders[start];
 
     glBufferData(GL_ARRAY_BUFFER, sprite_size * cap, NULL, GL_STREAM_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, len * sprite_size, r->sprites + start);
+    glBufferSubData(GL_ARRAY_BUFFER,
+                    0,
+                    len * sprite_size,
+                    renderer->sprites + start);
 
     // TODO: Only update if different?
     glUseProgram(shader);
@@ -99,9 +100,9 @@ sprite_renderer_init(struct sprite_renderer *r, struct allocator *allocator)
     array_init(r->shaders, allocator);
     array_init(r->textures, allocator);
 
-    sprite_init_quad_vbo(r);
-    sprite_init_sprite_vbo(r);
-    sprite_init_vao(r);
+    sprite_renderer__init_quad_vbo(r);
+    sprite_renderer__init_sprite_vbo(r);
+    sprite_renderer__init_vao(r);
 }
 
 void

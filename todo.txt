@@ -1,0 +1,183 @@
+void
+renderer_render(struct renderer *renderer)
+{
+    // v2 shadowcaster_quad[] = {
+    //     { .x = 0.0f, .y = 1.0f },
+    //     { .x = 0.0f, .y = 0.0f },
+    //     { .x = 1.0f, .y = 1.0f },
+    //     { .x = 1.0f, .y = 0.0f },
+    // };
+
+    // Clear the color buffer
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    // use less-than or equal depth testing
+    // glDepthFunc(GL_LEQUAL);
+
+    fbo_enable(renderer->fbo);
+
+    // clear the fbo and z-buffer
+    // glClearDepth(1.0f);
+    // glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+    // GL_STENCIL_BUFFER_BIT);
+
+    // fill z-buffer
+    // glEnable(GL_DEPTH_TEST);
+    // glDepthMask(true);
+    // glColorMask(0, 0, 0, 0);
+    // shadowcaster_renderer_render(renderer->shadowcaster_renderer);
+    // glDepthMask(false);
+    // glDisable(GL_DEPTH_TEST);
+
+    // for each light
+    // {
+    // clear framebuffer alpha
+    // glColorMask(0, 0, 0, 1);
+    // glClear(GL_COLOR_BUFFER_BIT);
+
+    // write new framebuffer alpha
+    // glDisable(GL_BLEND);
+    // glEnable(GL_DEPTH_TEST);
+    // glColorMask(0, 0, 0, 1);
+    // light_renderer_render(renderer->light_renderer, 0);
+
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_DST_ALPHA, GL_ZERO);
+
+    // draw shadow geometry
+    // render_shadows(shadowcaster_quad,
+    //                renderer->light_renderer->lights[0].pos);
+
+    // glDisable(GL_DEPTH_TEST);
+
+    // draw geometry
+    // glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_DST_ALPHA, GL_ONE);
+    // glColorMask(1, 1, 1, 0);
+    // light_renderer_render(renderer->light_renderer, 0);
+    // shadowcaster_renderer_render(renderer->shadowcaster_renderer);
+    // }
+
+    sprite_renderer_render(renderer->sprite_renderer);
+
+    fbo_disable(renderer->fbo);
+
+    // glDisable(GL_DEPTH_TEST);
+    // glDisable(GL_BLEND);
+
+    fbo_render(renderer, renderer->fbo);
+
+    // renderer_update_shadowcaster_buffer(renderer);
+
+    // // TODO: Get Matrices
+
+    // fbo_enable(renderer->fbo);
+
+    // glDepthFunc(GL_LEQUAL);
+    // glClearDepth(1.0f);
+
+    // glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+    // GL_STENCIL_BUFFER_BIT);
+
+    // glBindTexture(GL_TEXTURE_2D, 0);
+
+    // // Fill z-buffer
+    // {
+    //     glEnable(GL_DEPTH_TEST);
+    //     glDepthMask(true);
+    //     glColorMask(0, 0, 0, 0);
+
+    //     glBindVertexArray(renderer->vao.shadowcaster);
+    //     glUseProgram(renderer->shader.basic);
+    //     glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    //     glDepthMask(false);
+    //     glDisable(GL_DEPTH_TEST);
+    // }
+
+    // // TODO: For each light!
+    // {
+    //     r32 light_radius = 2.0f;
+    //     v2 light_pos, light_size;
+    //     v3 light_color;
+
+    //     light_pos = vec2(0.3f, 0.6f);
+    //     light_size = vec2(light_radius, light_radius);
+    //     light_color = vec3(1.0f, 1.0f, 1.0f);
+
+    //     // TODO: Update this with params from light
+    //     renderer_update_light_buffer(renderer,
+    //                                  light_pos,
+    //                                  light_size,
+    //                                  light_color,
+    //                                  1.0f);
+
+    //     // Clear framebuffer alpha
+    //     {
+    //         glColorMask(0, 0, 0, 1);
+    //         glClear(GL_COLOR_BUFFER_BIT);
+    //     }
+
+    //     // Write framebuffer alpha
+    //     {
+    //         glEnable(GL_DEPTH_TEST);
+    //         glDepthFunc(GL_LEQUAL);
+    //         glDisable(GL_BLEND);
+    //         glColorMask(1, 1, 1, 1);
+
+    //         glBindVertexArray(renderer->vao.light);
+    //         glUseProgram(renderer->shader.light);
+    //         // TODO: This is kind of weird. Remove instanced rendering here
+    //         glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 1);
+
+    //         glEnable(GL_BLEND);
+    //         glBlendFunc(GL_DST_ALPHA, GL_ZERO);
+
+    //         // TODO: For every shadow caster, create shadow geometry
+    //         v2 points[] = { vec2(-0.5f, +0.5f),
+    //                         vec2(-0.5f, -0.5f),
+    //                         vec2(+0.5f, -0.5f) };
+    //         (void)points;
+
+    //         // render_shadows(points, light_pos);
+
+    //         glDisable(GL_DEPTH_TEST);
+    //     }
+
+    //     // Draw Geometry
+    //     {
+    //         glEnable(GL_DEPTH_TEST);
+    //         glEnable(GL_BLEND);
+    //         glBlendFunc(GL_DST_ALPHA, GL_ONE);
+    //         glColorMask(1, 1, 1, 0);
+
+    //         // u32 len = array_count(renderer->sprites);
+    //         // glBindVertexArray(renderer->vao.geometry);
+    //         // glActiveTexture(GL_TEXTURE0);
+    //         // glBindTexture(GL_TEXTURE_2D, renderer->states[0].texture);
+
+    //         // glUseProgram(renderer->states[0].shader);
+    //         // glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, len);
+
+    //         glBindVertexArray(renderer->vao.light);
+    //         glUseProgram(renderer->shader.light);
+    //         glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, 1);
+
+    //         glBindVertexArray(renderer->vao.shadowcaster);
+    //         glUseProgram(renderer->shader.basic);
+    //         glDrawArrays(GL_TRIANGLES, 0, 3);
+    //     }
+    // }
+
+    // fbo_disable(renderer->fbo);
+
+    // glDisable(GL_DEPTH_TEST);
+    // glDisable(GL_BLEND);
+
+    // // TODO: Render the fbo
+    // fbo_render(renderer, renderer->fbo);
+}

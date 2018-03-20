@@ -7,6 +7,8 @@
 
 #include "allocators/allocator.h"
 
+#include "components.h"
+
 struct ecs;
 
 typedef void(*ecs__process_func_t);
@@ -70,7 +72,10 @@ void ecs_finalize(struct ecs *ecs);
 void ecs_process(struct ecs *ecs, void *u_data, r32 dt);
 
 // component
-void ecs_register_component(struct ecs *ecs, char *name, u32 size, u32 component);
+void ecs_register_component(struct ecs *ecs,
+                            char *name,
+                            u32 size,
+                            u32 component);
 
 // system
 void ecs_register_system(struct ecs *ecs, char *name, u32 system);

@@ -1,10 +1,10 @@
-#ifndef RENDER_COMPONENT_H
-#define RENDER_COMPONENT_H
+#ifndef MATERIAL_COMPONENT_H
+#define MATERIAL_COMPONENT_H
 
 #include "std.h"
 #include "vec.h"
 
-struct render
+struct material
 {
     u32 shader;
     u32 texture;

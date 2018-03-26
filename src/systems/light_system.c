@@ -24,6 +24,8 @@ light_system_process_begin(struct ecs *ecs, void *u_data)
 void
 light_system_process(struct ecs *ecs, void *u_data, u32 entity, r32 dt)
 {
+    struct components *components = ecs->component_handles;
+
     v2 *position;
     struct light *light;
 
@@ -37,8 +39,8 @@ light_system_process(struct ecs *ecs, void *u_data, u32 entity, r32 dt)
     engine = u_data;
     renderer = engine->renderer->light_renderer;
 
-    ecs_get_component(ecs, entity, component_position_id, (void **)&position);
-    ecs_get_component(ecs, entity, component_light_id, (void **)&light);
+    ecs_get_component(ecs, entity, components->position, (void **)&position);
+    ecs_get_component(ecs, entity, components->light, (void **)&light);
 
     vertex.pos = *position;
 

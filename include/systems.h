@@ -1,40 +1,43 @@
 #ifndef SYSTEMS_H
 #define SYSTEMS_H
 
+#include "ecs.h"
+
 #include "systems/movement_system.h"
 #include "systems/sprite_system.h"
 #include "systems/light_system.h"
 #include "systems/shadowcaster_system.h"
 
-#define system_movement_id 0
-#define system_sprite_id 1
-#define system_light_id 2
-#define system_shadowcaster_id 3
-
-struct system_functions
+struct systems
 {
-    void (*process_begin)(struct ecs *ecs, void *u_data);
-    void (*process)(struct ecs *ecs, void *u_data, u32 entity, r32 dt);
-    void (*process_end)(struct ecs *ecs, void *u_data);
+    u32 movement;
+    u32 sprite;
+    u32 light;
+    u32 shadowcaster;
 };
 
-static struct system_functions system_functions[] = {
-    // movement system
-    { .process_begin = NULL,
-      .process = movement_system_process,
-      .process_end = NULL },
-    // render system
-    { .process_begin = sprite_system_process_begin,
-      .process = sprite_system_process,
-      .process_end = NULL },
-    // light system
-    { .process_begin = light_system_process_begin,
-      .process = light_system_process,
-      .process_end = NULL },
-    // shadowcaster system
-    { .process_begin = shadowcaster_system_process_begin,
-      .process = shadowcaster_system_process,
-      .process_end = NULL }
-};
+#define get_system_id(ecs, s)                                                  \
+    (*(u32 *)(((u8 *)ecs->system_handles) + offsetof(struct systems, s)))
+
+#define register_system(ecs, s, f)                                             \
+    ecs_register_system(ecs, #s "_system", f, &get_system_id(ecs, s))
+
+void
+ecs_bind_system_funcs(struct ecs *ecs,
+                      u32 system,
+                      struct ecs_system_funcs *funcs)
+{
+    if (funcs == NULL)
+    {
+        funcs = &(struct ecs_system_funcs){};
+    }
+
+    ecs->systems[system].process_begin = funcs->process_begin;
+    ecs->systems[system].process = funcs->process;
+    ecs->systems[system].process_end = funcs->process_end;
+}
+
+#define bind_system_funcs(ecs, s)                                              \
+    ecs_bind_system_funcs(ecs, get_system_id(ecs, s), &(s##_system_funcs))
 
 #endif

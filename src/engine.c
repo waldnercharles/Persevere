@@ -1,7 +1,10 @@
 #include "engine.h"
 #include "log.h"
 
+#include "array.h"
 #include "shader.h"
+#include "systems.h"
+#include "components.h"
 
 #include "allocators/allocator.h"
 
@@ -91,8 +94,13 @@ engine_ecs_init(struct engine *engine)
     log_debug("Allocating Entity Component System...");
 
     ecs = alloc(engine->platform->memory->permanent, sizeof(struct ecs));
-
     ecs_init(ecs, engine->platform->memory->permanent);
+
+    ecs->system_handles =
+        alloc(engine->platform->memory->permanent, sizeof(struct systems));
+
+    ecs->component_handles =
+        alloc(engine->platform->memory->permanent, sizeof(struct components));
 
     engine->ecs = ecs;
 }
@@ -166,13 +174,45 @@ engine_init(struct platform *platform, struct engine **engine)
 void
 engine_unbind(struct engine *engine)
 {
-    engine_close_audio_device(engine->platform->api, engine->mixer);
-    mixer_set_event_handler(engine->mixer, NULL);
+    struct ecs_system *system;
+
+    struct platform_api *api = engine->platform->api;
+    struct mixer *mixer = engine->mixer;
+    struct ecs *ecs = engine->ecs;
+
+    engine_close_audio_device(api, mixer);
+    mixer_set_event_handler(mixer, NULL);
+
+    array_for_each (system, ecs->systems)
+    {
+        ecs_bind_system_funcs(ecs, system->id, NULL);
+    }
 }
 
 void
 engine_bind(struct engine *engine)
 {
-    engine_open_audio_device(engine->platform->api, engine->mixer);
-    mixer_set_event_handler(engine->mixer, engine__mixer_event_handler);
+    struct ecs_system *system;
+
+    struct platform_api *api = engine->platform->api;
+    struct mixer *mixer = engine->mixer;
+    struct ecs *ecs = engine->ecs;
+
+    engine_open_audio_device(api, mixer);
+    mixer_set_event_handler(mixer, engine__mixer_event_handler);
+
+    bind_system_funcs(ecs, light);
+    bind_system_funcs(ecs, movement);
+    bind_system_funcs(ecs, shadowcaster);
+    bind_system_funcs(ecs, sprite);
+
+    array_for_each (system, ecs->systems)
+    {
+        if (system->process == NULL)
+        {
+            log_error("System (%s, %i) process function not bound",
+                      system->name,
+                      system->id);
+        }
+    }
 }

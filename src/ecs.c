@@ -130,34 +130,35 @@ ecs_process(struct ecs *ecs, void *u_data, r32 dt)
     // systems
     array_for_each (system, ecs->systems)
     {
-        if (system_functions[system->id].process_begin != NULL)
+        if (system->process_begin != NULL)
         {
-            system_functions[system->id].process_begin(ecs, u_data);
+            system->process_begin(ecs, u_data);
         }
 
         bitset_for_each (i, &(system->entities))
         {
-            system_functions[system->id].process(ecs, u_data, i, dt);
+            system->process(ecs, u_data, i, dt);
         }
 
-        if (system_functions[system->id].process_end != NULL)
+        if (system->process_end != NULL)
         {
-            system_functions[system->id].process_end(ecs, u_data);
+            system->process_end(ecs, u_data);
         }
     }
 }
 
 // component
 void
-ecs_register_component(struct ecs *ecs, char *name, u32 size, u32 id)
+ecs_register_component(struct ecs *ecs, char *name, u32 size, u32 *id)
 {
-    struct ecs_component tmp, c = { 0 };
-    bool registered;
+    struct ecs_component c;
 
-    c.id = id;
-    c.name = name;
-    c.size = size;
-    c.offset = ecs->data_width;
+    c = (struct ecs_component){
+        c.id = ecs->num_components,
+        c.name = name,
+        c.size = size,
+        c.offset = ecs->data_width,
+    };
 
     ecs->data_width += size;
 
@@ -166,41 +167,33 @@ ecs_register_component(struct ecs *ecs, char *name, u32 size, u32 id)
         array_init(ecs->components, ecs->allocator);
     }
 
-    array__grow_to(ecs->components, id + 1);
-    tmp = ecs->components[id];
+    array__grow_to(ecs->components, c.id + 1);
 
-    registered = tmp.id == c.id && tmp.size == c.size &&
-                 tmp.offset == c.offset && tmp.name != NULL &&
-                 strcmp(tmp.name, c.name) == 0;
-
-    if (registered)
-    {
-        log_warning("Component (%s, %i) already registered.", c.name, c.id);
-        return;
-    }
-    else
-    {
-        log_debug("Registering component (%s, %i).", c.name, c.id);
-        ecs->components[id] = c;
-        ++(array__len(ecs->components));
-        ++(ecs->num_components);
-    }
+    log_debug("Registering component (%s, %i).", c.name, c.id);
+    ecs->components[c.id] = c;
+    *id = c.id;
+    ++(array__len(ecs->components));
+    ++(ecs->num_components);
 }
 
 // system
 void
-ecs_register_system(struct ecs *ecs, char *name, u32 id)
+ecs_register_system(struct ecs *ecs,
+                    char *name,
+                    struct ecs_system_funcs funcs,
+                    u32 *id)
 {
-    struct ecs_system tmp, s = { 0 };
-    bool registered;
+    struct ecs_system s;
+
+    s = (struct ecs_system){
+        .id = ecs->num_systems,
+        .name = name,
+        .process_begin = funcs.process_begin,
+        .process = funcs.process,
+        .process_end = funcs.process_end,
+    };
 
     bitset_init(&s.entities, ecs->allocator);
-
-    s.id = id;
-    s.name = name;
-    s.entities.bytes = NULL;
-    s.entities.capacity = 0;
-
     array_init(s.watched_components, ecs->allocator);
 
     if (ecs->systems == NULL)
@@ -208,23 +201,13 @@ ecs_register_system(struct ecs *ecs, char *name, u32 id)
         array_init(ecs->systems, ecs->allocator);
     }
 
-    array__grow_to(ecs->systems, id + 1);
-    tmp = ecs->systems[id];
+    array__grow_to(ecs->systems, s.id + 1);
 
-    registered =
-        tmp.id == s.id && tmp.name != NULL && strcmp(tmp.name, s.name) == 0;
-
-    if (registered)
-    {
-        log_warning("System (%s, %i) already registered", s.name, s.id);
-    }
-    else
-    {
-        log_debug("Registering system (%s, %i)", s.name, s.id);
-        ecs->systems[id] = s;
-        ++(array__len(ecs->systems));
-        ++(ecs->num_systems);
-    }
+    log_debug("Registering system (%s, %i)", s.name, s.id);
+    ecs->systems[s.id] = s;
+    *id = s.id;
+    ++(array__len(ecs->systems));
+    ++(ecs->num_systems);
 }
 
 void
@@ -241,7 +224,7 @@ ecs_process_system(struct ecs *ecs, u32 system, void *u_data, r32 dt)
 
     bitset_for_each (entity, &s->entities)
     {
-        system_functions[s->id].process(ecs, u_data, entity, dt);
+        s->process(ecs, u_data, entity, dt);
     }
 }
 

@@ -11,8 +11,6 @@
 
 struct ecs;
 
-typedef void(*ecs__process_func_t);
-
 enum ecs_state
 {
     ECS_STATE_ADDED,
@@ -21,10 +19,22 @@ enum ecs_state
     ECS_STATE_DELETED,
 };
 
+struct ecs_system_funcs
+{
+    void (*process_begin)(struct ecs *ecs, void *u_data);
+    void (*process)(struct ecs *ecs, void *u_data, u32 entity, r32 dt);
+    void (*process_end)(struct ecs *ecs, void *u_data);
+};
+
 struct ecs_system
 {
     u32 id;
     const char *name;
+
+    void (*process_begin)(struct ecs *ecs, void *u_data);
+    void (*process)(struct ecs *ecs, void *u_data, u32 entity, r32 dt);
+    void (*process_end)(struct ecs *ecs, void *u_data);
+
     u32 *watched_components;
     struct bitset entities;
 };
@@ -33,6 +43,7 @@ struct ecs_component
 {
     u32 id;
     const char *name;
+
     u32 size;
     u32 offset;
 };
@@ -63,6 +74,9 @@ struct ecs
 
     u32 num_systems;
     struct ecs_system *systems;
+
+    void *system_handles;
+    void *component_handles;
 };
 
 // ecs
@@ -72,13 +86,14 @@ void ecs_finalize(struct ecs *ecs);
 void ecs_process(struct ecs *ecs, void *u_data, r32 dt);
 
 // component
-void ecs_register_component(struct ecs *ecs,
-                            char *name,
-                            u32 size,
-                            u32 component);
+void ecs_register_component(struct ecs *ecs, char *name, u32 size, u32 *id);
 
 // system
-void ecs_register_system(struct ecs *ecs, char *name, u32 system);
+
+void ecs_register_system(struct ecs *ecs,
+                         char *name,
+                         struct ecs_system_funcs funcs,
+                         u32 *id);
 
 void ecs_watch(struct ecs *e, u32 system, u32 component);
 void ecs_process_system(struct ecs *ecs, u32 system, void *u_data, r32 dt);
@@ -98,4 +113,5 @@ void ecs_set_component(struct ecs *ecs,
 
 void ecs_rem_component(struct ecs *ecs, u32 entity, u32 component);
 void ecs_set_state(struct ecs *ecs, u32 entity, u32 state);
+
 #endif

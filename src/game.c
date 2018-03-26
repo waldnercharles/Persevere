@@ -7,61 +7,43 @@
 void
 game_register_components(struct ecs *ecs)
 {
-    ecs_register_component(ecs,
-                           "position_component",
-                           sizeof(v2),
-                           component_position_id);
-
-    ecs_register_component(ecs,
-                           "movement_component",
-                           sizeof(struct movement),
-                           component_movement_id);
-
-    ecs_register_component(ecs,
-                           "quad_component",
-                           sizeof(struct quad),
-                           component_quad_id);
-
-    ecs_register_component(ecs,
-                           "material_component",
-                           sizeof(struct material),
-                           component_material_id);
-
-    ecs_register_component(ecs,
-                           "light_component",
-                           sizeof(struct light),
-                           component_light_id);
-
-    ecs_register_component(ecs,
-                           "shadowcaster_component",
-                           sizeof(struct shadowcaster),
-                           component_shadowcaster_id);
+    register_component(ecs, position);
+    register_component(ecs, movement);
+    register_component(ecs, quad);
+    register_component(ecs, material);
+    register_component(ecs, light);
+    register_component(ecs, shadowcaster);
 }
 
 void
 game_register_systems(struct ecs *ecs)
 {
-    ecs_register_system(ecs, "movement_system", system_movement_id);
-    ecs_watch(ecs, system_movement_id, component_movement_id);
-    ecs_watch(ecs, system_movement_id, component_position_id);
+    struct systems *systems = ecs->system_handles;
+    struct components *components = ecs->component_handles;
 
-    ecs_register_system(ecs, "sprite_system", system_sprite_id);
-    ecs_watch(ecs, system_sprite_id, component_material_id);
-    ecs_watch(ecs, system_sprite_id, component_quad_id);
-    ecs_watch(ecs, system_sprite_id, component_position_id);
+    register_system(ecs, movement, movement_system_funcs);
+    ecs_watch(ecs, systems->movement, components->movement);
+    ecs_watch(ecs, systems->movement, components->position);
 
-    ecs_register_system(ecs, "light_system", system_light_id);
-    ecs_watch(ecs, system_light_id, component_position_id);
-    ecs_watch(ecs, system_light_id, component_light_id);
+    register_system(ecs, sprite, sprite_system_funcs);
+    ecs_watch(ecs, systems->sprite, components->material);
+    ecs_watch(ecs, systems->sprite, components->quad);
+    ecs_watch(ecs, systems->sprite, components->position);
 
-    ecs_register_system(ecs, "shadowcaster_system", system_shadowcaster_id);
-    ecs_watch(ecs, system_shadowcaster_id, component_position_id);
-    ecs_watch(ecs, system_shadowcaster_id, component_shadowcaster_id);
+    register_system(ecs, light, light_system_funcs);
+    ecs_watch(ecs, systems->light, components->position);
+    ecs_watch(ecs, systems->light, components->light);
+
+    register_system(ecs, shadowcaster, shadowcaster_system_funcs);
+    ecs_watch(ecs, systems->shadowcaster, components->position);
+    ecs_watch(ecs, systems->shadowcaster, components->shadowcaster);
 }
 
 void
 game_start(struct engine *engine)
 {
+    struct components *components = engine->ecs->component_handles;
+
     u32 entity;
     v2 position;
     struct quad quad;
@@ -109,14 +91,14 @@ game_start(struct engine *engine)
 
             ecs_set_component(engine->ecs,
                               entity,
-                              component_position_id,
+                              components->position,
                               &position);
 
-            ecs_set_component(engine->ecs, entity, component_quad_id, &quad);
+            ecs_set_component(engine->ecs, entity, components->quad, &quad);
 
             ecs_set_component(engine->ecs,
                               entity,
-                              component_material_id,
+                              components->material,
                               &material);
 
             ecs_set_state(engine->ecs, entity, ECS_STATE_ADDED);
@@ -132,8 +114,8 @@ game_start(struct engine *engine)
                             .depth = 0.0f };
 
     ecs_create_entity(engine->ecs, &entity);
-    ecs_set_component(engine->ecs, entity, component_position_id, &position);
-    ecs_set_component(engine->ecs, entity, component_light_id, &light);
+    ecs_set_component(engine->ecs, entity, components->position, &position);
+    ecs_set_component(engine->ecs, entity, components->light, &light);
     ecs_set_state(engine->ecs, entity, ECS_STATE_ADDED);
 
     // shadowcasters
@@ -141,10 +123,10 @@ game_start(struct engine *engine)
     shadowcaster = (struct shadowcaster){ .size = vec2(0.1f, 0.1f) };
 
     ecs_create_entity(engine->ecs, &entity);
-    ecs_set_component(engine->ecs, entity, component_position_id, &position);
+    ecs_set_component(engine->ecs, entity, components->position, &position);
     ecs_set_component(engine->ecs,
                       entity,
-                      component_shadowcaster_id,
+                      components->shadowcaster,
                       &shadowcaster);
     ecs_set_state(engine->ecs, entity, ECS_STATE_ADDED);
 

@@ -23,6 +23,8 @@ shadowcaster_system_process_begin(struct ecs *ecs, void *u_data)
 void
 shadowcaster_system_process(struct ecs *ecs, void *u_data, u32 entity, r32 dt)
 {
+    struct components *components = ecs->component_handles;
+
     v2 *position;
     struct shadowcaster *shadowcaster;
 
@@ -36,10 +38,10 @@ shadowcaster_system_process(struct ecs *ecs, void *u_data, u32 entity, r32 dt)
     engine = u_data;
     renderer = engine->renderer->shadowcaster_renderer;
 
-    ecs_get_component(ecs, entity, component_position_id, (void **)&position);
+    ecs_get_component(ecs, entity, components->position, (void **)&position);
     ecs_get_component(ecs,
                       entity,
-                      component_shadowcaster_id,
+                      components->shadowcaster,
                       (void **)&shadowcaster);
 
     vertex.pos = *position;

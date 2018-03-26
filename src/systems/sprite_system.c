@@ -27,6 +27,8 @@ sprite_system_process_begin(struct ecs *ecs, void *u_data)
 void
 sprite_system_process(struct ecs *ecs, void *u_data, u32 entity, r32 dt)
 {
+    struct components *components = ecs->component_handles;
+
     v2 *position;
     struct quad *quad;
     struct material *material;
@@ -41,9 +43,9 @@ sprite_system_process(struct ecs *ecs, void *u_data, u32 entity, r32 dt)
     engine = u_data;
     renderer = engine->renderer->sprite_renderer;
 
-    ecs_get_component(ecs, entity, component_position_id, (void **)&position);
-    ecs_get_component(ecs, entity, component_quad_id, (void **)&quad);
-    ecs_get_component(ecs, entity, component_material_id, (void **)&material);
+    ecs_get_component(ecs, entity, components->position, (void **)&position);
+    ecs_get_component(ecs, entity, components->quad, (void **)&quad);
+    ecs_get_component(ecs, entity, components->material, (void **)&material);
 
     vertex.pos = *position;
     vertex.size = quad->size;

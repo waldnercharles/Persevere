@@ -1,7 +1,7 @@
 #version 330
 
 layout(location = 0) in vec2 quad;
-layout(location = 1) in vec2 pos;
+layout(location = 1) in vec3 pos;
 layout(location = 2) in vec2 size;
 layout(location = 3) in vec2 tex;
 // layout (location = 4) in float theta;
@@ -10,7 +10,7 @@ layout(location = 3) in vec2 tex;
 
 out fragment_data
 {
-    vec3 color;
+    vec4 color;
     vec2 tex;
 }
 vs_out;
@@ -27,7 +27,7 @@ vs_out;
 void
 main()
 {
-    gl_Position = vec4(quad * size + pos, 0.0, 1.0);
-    vs_out.color = vec3(1.0, 1.0, 1.0);
-    vs_out.tex = (quad / 32.0) + tex;
+    gl_Position = vec4(quad * size + pos.xy, 0.0, 1.0);
+    vs_out.color = vec4(1.0, 1.0, 1.0, 1.0);
+    vs_out.tex = ((quad + 0.5) / 32.0) + tex;
 }

@@ -154,7 +154,7 @@ ecs_register_component(struct ecs *ecs, char *name, u32 size, u32 *id)
     struct ecs_component c;
 
     c = (struct ecs_component){
-        c.id = ecs->num_components,
+        c.id = ecs->num_components + 1,
         c.name = name,
         c.size = size,
         c.offset = ecs->data_width,

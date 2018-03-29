@@ -205,6 +205,7 @@ engine_bind(struct engine *engine)
     bind_system_funcs(ecs, movement);
     bind_system_funcs(ecs, shadowcaster);
     bind_system_funcs(ecs, sprite);
+    bind_system_funcs(ecs, mouse_follow);
 
     array_for_each (system, ecs->systems)
     {

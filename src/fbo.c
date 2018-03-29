@@ -72,13 +72,13 @@ fbo_init(struct fbo *fbo, u32 width, u32 height)
 
     // Create screen quad
     static const v2 quad[] = {
-        {.x = -1.0f, .y = +1.0f }, {.u = 0.0f, .v = 1.0f },
-        {.x = -1.0f, .y = -1.0f }, {.u = 0.0f, .v = 0.0f },
-        {.x = +1.0f, .y = -1.0f }, {.u = 1.0f, .v = 0.0f },
+        { .x = -1.0f, .y = +1.0f }, { .u = 0.0f, .v = 1.0f },
+        { .x = -1.0f, .y = -1.0f }, { .u = 0.0f, .v = 0.0f },
+        { .x = +1.0f, .y = -1.0f }, { .u = 1.0f, .v = 0.0f },
 
-        {.x = -1.0f, .y = +1.0f }, {.u = 0.0f, .v = 1.0f },
-        {.x = +1.0f, .y = -1.0f }, {.u = 1.0f, .v = 0.0f },
-        {.x = +1.0f, .y = +1.0f }, {.u = 1.0f, .v = 1.0f },
+        { .x = -1.0f, .y = +1.0f }, { .u = 0.0f, .v = 1.0f },
+        { .x = +1.0f, .y = -1.0f }, { .u = 1.0f, .v = 0.0f },
+        { .x = +1.0f, .y = +1.0f }, { .u = 1.0f, .v = 1.0f },
     };
 
     glGenVertexArrays(1, &fbo->vao);
@@ -174,7 +174,7 @@ fbo_enable(struct fbo *fbo)
 
     glBindFramebuffer(GL_FRAMEBUFFER, fbo->handle);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, fbo->size.width, fbo->size.height);

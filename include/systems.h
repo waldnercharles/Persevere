@@ -4,6 +4,7 @@
 #include "ecs.h"
 
 #include "systems/movement_system.h"
+#include "systems/mouse_follow_system.h"
 #include "systems/sprite_system.h"
 #include "systems/light_system.h"
 #include "systems/shadowcaster_system.h"
@@ -14,6 +15,7 @@ struct systems
     u32 sprite;
     u32 light;
     u32 shadowcaster;
+    u32 mouse_follow;
 };
 
 #define get_system_id(ecs, s)                                                  \

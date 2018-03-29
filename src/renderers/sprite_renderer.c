@@ -1,4 +1,5 @@
 #include "renderers/sprite_renderer.h"
+#include "array.h"
 #include "vec.h"
 #include "log.h"
 
@@ -6,10 +7,10 @@ static void
 sprite_renderer__init_quad_vbo(struct sprite_renderer *renderer)
 {
     v2 quad[] = {
-        { .x = 0.0f, .y = 1.0f },
-        { .x = 0.0f, .y = 0.0f },
-        { .x = 1.0f, .y = 1.0f },
-        { .x = 1.0f, .y = 0.0f },
+        { .x = -0.5f, .y = +0.5f },
+        { .x = -0.5f, .y = -0.5f },
+        { .x = +0.5f, .y = +0.5f },
+        { .x = +0.5f, .y = -0.5f },
     };
     glGenBuffers(1, &renderer->quad_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->quad_vbo);
@@ -50,7 +51,7 @@ sprite_renderer__init_vao(struct sprite_renderer *r)
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, r->sprite_vbo);
-    glVertexAttribPointer(1, 2, GL_FLOAT, 0, size, (void *)pos_offset);
+    glVertexAttribPointer(1, 3, GL_FLOAT, 0, size, (void *)pos_offset);
     glVertexAttribPointer(2, 2, GL_FLOAT, 0, size, (void *)size_offset);
     glVertexAttribPointer(3, 2, GL_FLOAT, 0, size, (void *)uv_offset);
 
@@ -84,7 +85,6 @@ sprite_render_length(struct sprite_renderer *renderer, u32 start, u32 len)
                     len * sprite_size,
                     renderer->sprites + start);
 
-    // TODO: Only update if different?
     glUseProgram(shader);
 
     glActiveTexture(GL_TEXTURE0);
@@ -135,28 +135,32 @@ sprite_renderer_render(struct sprite_renderer *r)
     glBindVertexArray(r->vao);
     glBindBuffer(GL_ARRAY_BUFFER, r->sprite_vbo);
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // glEnable(GL_DEPTH_TEST);
+    // glDepthFunc(GL_LESS);
+
     start = 0;
     end = 0;
 
-    for (i = 0; i < len; ++i)
+    for (i = 0; i < len; ++i, ++end)
     {
         if (r->shaders[i] != shader || r->textures[i] != texture)
         {
             sprite_render_length(r, start, end);
 
-            start = end;
+            start = i;
             end = 0;
 
             shader = r->shaders[i];
             texture = r->textures[i];
         }
-        else
-        {
-            ++end;
-        }
     }
 
     sprite_render_length(r, start, end);
 
+    glDisable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

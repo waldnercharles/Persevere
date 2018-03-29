@@ -4,7 +4,7 @@
 
 struct position
 {
-    v2 v2;
+    v3 pos;
 };
 
 #endif

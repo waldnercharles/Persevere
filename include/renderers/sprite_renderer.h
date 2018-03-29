@@ -7,7 +7,7 @@
 
 struct sprite_vertex
 {
-    v2 pos;
+    v3 pos;
     v2 size;
     v2 uv;
 };

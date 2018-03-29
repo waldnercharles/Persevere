@@ -1,190 +1,77 @@
-// #include "engine.h"
-// #include "typedefs.h"
+#include "sort.h"
 
-// void
-// swap_bytes(char *a, char *b, u32 nbytes)
-// {
-//     char tmp;
-//     do
-//     {
-//         tmp = *a;
-//         *a++ = *b;
-//         *b++ = tmp;
-//     } while (--nbytes);
-// }
+void
+swap(u8 *a, u8 *b, u32 n)
+{
+    u8 tmp;
+    while (n--)
+    {
+        tmp = a[n];
+        a[n] = b[n];
+        b[n] = tmp;
+    }
+}
 
-// void
-// insert_sort(void *a,
-//             u32 len,
-//             u32 size,
-//             int (*cmp_lt)(void *a, void *b, void *context),
-//             void *context)
-// {
-//     char *i, *j;
-//     char *end = (char *)a + size * len;
-//     for (i = (char *)a + size; i < end; i += size)
-//     {
-//         for (j = i; j > (char *)a && cmp_lt(j, j - size, context); j -= size)
-//         {
-//             swap_bytes(j, j - size, size);
-//         }
-//     }
-// }
+static void
+satisfy_heap(u8 *a,
+             s32 i,
+             s32 heap_size,
+             s32 size,
+             void *u_data,
+             s32 (*cmp)(const void *, const void *, void *))
+{
+    s32 l, r, lrg;
+    l = i * 2;
+    r = i * 2 + 1;
+    if (l <= heap_size && cmp(&a[size * l], &a[size * i], u_data) > 0)
+    {
+        lrg = l;
+    }
+    else
+    {
+        lrg = i;
+    }
+    if (r <= heap_size && cmp(a + (size * r), &a[size * lrg], u_data) > 0)
+    {
+        lrg = r;
+    }
+    if (lrg != i)
+    {
+        swap(&a[i * size], &a[lrg * size], size);
+        satisfy_heap(a, lrg, heap_size, size, u_data, cmp);
+    }
+}
 
-// void
-// comb_sort(void *a,
-//           u32 len,
-//           u32 size,
-//           int (*cmp_lt)(void *a, void *b, void *context),
-//           void *context)
-// {
-//     static const double shrink_factor = 1.2473309501039786540366528676643;
+static void
+build_heap(u8 *a,
+           s32 n,
+           s32 size,
+           void *u_data,
+           s32 (*cmp)(const void *, const void *, void *))
+{
+    s32 heap_size, i;
+    heap_size = n - 1;
+    for (i = (n / 2); i >= 0; --i)
+    {
+        satisfy_heap(a, i, heap_size, size, u_data, cmp);
+    }
+}
 
-//     char *i, *j;
-//     int swap;
-//     u32 gap = len;
+void
+heap_sort(void *a,
+          s32 n,
+          s32 size,
+          void *u_data,
+          s32 (*cmp)(const void *, const void *, void *))
+{
+    s32 heap_size, i;
 
-//     do
-//     {
-//         if (gap > 2)
-//         {
-//             gap = (u32)gap / shrink_factor;
-//             if (gap == 9 || gap == 10)
-//             {
-//                 gap = 11;
-//             }
-//         }
-
-//         swap = 0;
-//         for (i = a; i < (char *)a + (len - gap) * size; i += size)
-//         {
-//             j = i + (gap * size);
-//             if (cmp_lt(j, i, context))
-//             {
-//                 swap_bytes(i, j, size);
-//                 swap = 1;
-//             }
-//         }
-//     } while (swap || gap > 2);
-
-//     if (gap != 1)
-//     {
-//         insert_sort(a, len, size, cmp_lt, context);
-//     }
-// }
-
-// struct intro_sort_stack
-// {
-//     void *left, *right;
-//     int depth;
-// };
-
-// static inline void *
-// intro_sort__select_pivot(void *val1,
-//                          void *val2,
-//                          void *val3,
-//                          int (*cmp_lt)(void *a, void *b, void *context),
-//                          void *context)
-// {
-//     return (cmp_lt(val1, val2, context)
-//                 ? (cmp_lt(val2, val3, context)
-//                        ? val2
-//                        : (cmp_lt(val1, val3, context) ? val3 : val1))
-//                 : (cmp_lt(val1, val3, context)
-//                        ? val1
-//                        : (cmp_lt(val2, val3, context) ? val3 : val2)));
-// }
-
-// static inline void
-// intro_sort__partition(char *left,
-//                       u32 len,
-//                       u32 size,
-//                       int (*cmp_lt)(void *a, void *b, void *context),
-//                       void *context,
-//                       u32 max_depth)
-// {
-//     char *right, *pivot;
-
-//     if (--max_depth == 0)
-//     {
-//         // Worst case scenario - switch to comb sort
-//         comb_sort(left, len, size, cmp_lt, context);
-//         return;
-//     }
-
-//     right = left + (len - 1) * size;
-
-//     pivot = intro_sort__select_pivot(left,
-//                                      right,
-//                                      left + ((right - left) >> 1) * size,
-//                                      cmp_lt,
-//                                      context);
-
-//     // use stack instead of recursion?
-//     for (;;)
-//     {
-//         do
-//         {
-//             left += size;
-//         }
-//     }
-// }
-
-// void
-// intro_sort(void *a,
-//            u32 len,
-//            u32 size,
-//            int (*cmp_lt)(void *a, void *b, void *context),
-//            void *context)
-// {
-//     int depth;
-//     struct intro_sort_stack *top;
-
-//     // Iterators
-//     char *i, *j, *k, *l, *m;
-
-//     // Trivial optimizations
-//     if (len <= 1)
-//     {
-//         return;
-//     }
-//     // TODO: Sorting network optimization
-//     else if (len == 2)
-//     {
-//         if (cmp_lt((char *)a + size, a, context))
-//         {
-//             swap_bytes((char *)a + size, a, size);
-//         }
-//         return;
-//     }
-
-//     depth = 2;
-//     while ((1ul << depth) < len)
-//     {
-//         ++depth;
-//     }
-
-//     struct intro_sort_stack stack[depth + 2];
-//     top = stack;
-
-//     i = a;
-//     j = (char *)a + (len - size);
-
-//     depth <<= 1;
-//     for (;;)
-//     {
-//         if (i < j)
-//         {
-//             if (--depth == 0)
-//             {
-//                 comb_sort(i, j - i + size, size, cmp_lt, context);
-//                 j = i;
-//                 continue;
-//             }
-
-//             k = i;
-//             l = j;
-//             m =
-//         }
-//     }
-// }
+    build_heap(a, n, size, u_data, cmp);
+    heap_size = n - 1;
+    for (i = heap_size; i >= 0; --i)
+    {
+        swap(a, (u8 *)a + (heap_size * size), size);
+        --heap_size;
+        satisfy_heap(a, 0, heap_size, size, u_data, cmp);
+    }
+}

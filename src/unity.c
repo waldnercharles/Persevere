@@ -12,6 +12,7 @@
 #include "map.c"
 #include "mixer.c"
 #include "shader.c"
+#include "sort.c"
 #include "sparse_set.c"
 #include "vec.c"
 
@@ -29,3 +30,4 @@
 #include "systems/sprite_system.c"
 #include "systems/light_system.c"
 #include "systems/shadowcaster_system.c"
+#include "systems/mouse_follow_system.c"

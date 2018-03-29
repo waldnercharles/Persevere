@@ -8,11 +8,13 @@
 #include "allocators/allocator.c"
 #include "allocators/linear_allocator.c"
 #include "file.c"
+#include "vec.c"
 
 #include "platform_audio.c"
 #include "platform_sdl_audio.c"
 #include "platform_sdl_dll.c"
 #include "platform_sdl_input.c"
+#include "platform_sdl_window.c"
 
 void
 platform_glew_init()
@@ -88,13 +90,21 @@ main()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                         SDL_GL_CONTEXT_PROFILE_CORE);
 
+    platform->window_size_x = 512;
+    platform->window_size_y = 512;
+
+    platform->mouse_pos_x = 0;
+    platform->mouse_pos_y = 0;
+
     platform->window =
         SDL_CreateWindow("Persevere",
                          SDL_WINDOWPOS_UNDEFINED,
                          SDL_WINDOWPOS_UNDEFINED,
-                         512,
-                         512,
+                         platform->window_size_x,
+                         platform->window_size_y,
                          SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
+
+    SDL_ShowCursor(false);
 
     platform->gl = SDL_GL_CreateContext(platform->window);
 

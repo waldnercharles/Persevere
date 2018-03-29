@@ -117,6 +117,11 @@ platform_handle_events(struct engine *engine)
                                    event.window.data1,
                                    event.window.data2);
                         break;
+
+                    case SDL_WINDOWEVENT_SIZE_CHANGED:
+                        engine->platform->window_size_x = event.window.data1;
+                        engine->platform->window_size_y = event.window.data2;
+                        break;
                 }
                 break;
 
@@ -126,6 +131,11 @@ platform_handle_events(struct engine *engine)
 
             case SDL_CONTROLLERDEVICEREMOVED:
                 platform_close_controller(engine, event.cdevice.which);
+                break;
+
+            case SDL_MOUSEMOTION:
+                engine->platform->mouse_pos_x = event.motion.x;
+                engine->platform->mouse_pos_y = event.motion.y;
                 break;
         }
     }

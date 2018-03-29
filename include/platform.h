@@ -21,7 +21,6 @@ struct platform_api
     void *(*alloc)(struct allocator *allocator, u32 size);
 
     // Audio
-
     void (*open_audio_device)(u32 audio_device,
                               struct audio_spec *want,
                               struct audio_spec *have,
@@ -34,10 +33,12 @@ struct platform_api
 
     void (*pause_audio_device)(u32 audio_device, bool pause);
     void (*lock_audio_device)(u32 audio_device, bool lock);
-    void (*unlock_audio_device)(u32 audio_device);
+};
 
-    // Graphics
-    void (*render)(struct renderer *renderer);
+struct mouse
+{
+    s32 pos_x, pos_y;
+    s32 rel_x, rel_y;
 };
 
 struct platform
@@ -47,6 +48,9 @@ struct platform
 
     struct memory *memory;
     struct platform_api *api;
+
+    s32 mouse_pos_x, mouse_pos_y;
+    s32 window_size_x, window_size_y;
 };
 
 #endif

@@ -6070,6 +6070,10 @@ static int8 channel_position[7][6] = {
     { L, C, R, L, R, C },
 };
 
+#undef L
+#undef C
+#undef R
+
 #ifndef STB_VORBIS_NO_FAST_SCALED_FLOAT
 typedef union
 {

@@ -32,10 +32,10 @@ sprite_renderer__init_sprite_vbo(struct sprite_renderer *renderer)
 static void
 sprite_renderer__init_vao(struct sprite_renderer *r)
 {
-    static const u32 size = sizeof(struct sprite_vertex);
-    static const u32 pos_offset = offsetof(struct sprite_vertex, pos);
-    static const u32 size_offset = offsetof(struct sprite_vertex, size);
-    static const u32 uv_offset = offsetof(struct sprite_vertex, uv);
+    static const u64 size = sizeof(struct sprite_vertex);
+    static const u64 pos_offset = offsetof(struct sprite_vertex, pos);
+    static const u64 size_offset = offsetof(struct sprite_vertex, size);
+    static const u64 uv_offset = offsetof(struct sprite_vertex, uv);
 
     if (r->quad_vbo == 0 || r->sprite_vbo == 0)
     {
@@ -74,16 +74,16 @@ sprite_render_length(struct sprite_renderer *renderer, u32 start, u32 len)
     u32 cap, texture, shader;
     static const u32 sprite_size = sizeof(struct sprite_vertex);
 
-    cap = array__cap(renderer->sprites);
+    cap = renderer->sprites->cap;
 
-    texture = renderer->textures[start];
-    shader = renderer->shaders[start];
+    texture = *(u32 *)array_get(renderer->textures, start);
+    shader = *(u32 *)array_get(renderer->shaders, start);
 
     glBufferData(GL_ARRAY_BUFFER, sprite_size * cap, NULL, GL_STREAM_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER,
                     0,
                     len * sprite_size,
-                    renderer->sprites + start);
+                    array_get(renderer->sprites, start));
 
     glUseProgram(shader);
 
@@ -96,9 +96,9 @@ sprite_render_length(struct sprite_renderer *renderer, u32 start, u32 len)
 void
 sprite_renderer_init(struct sprite_renderer *r, struct allocator *allocator)
 {
-    array_init(r->sprites, allocator);
-    array_init(r->shaders, allocator);
-    array_init(r->textures, allocator);
+    array_alloc(allocator, 0, sizeof(struct sprite_vertex), &(r->sprites));
+    array_alloc(allocator, 0, sizeof(u32), &(r->shaders));
+    array_alloc(allocator, 0, sizeof(u32), &(r->textures));
 
     sprite_renderer__init_quad_vbo(r);
     sprite_renderer__init_sprite_vbo(r);
@@ -111,11 +111,13 @@ sprite_renderer_render(struct sprite_renderer *r)
     u32 i;
     u32 len, tex_len, shader_len;
     u32 start, end;
-    u32 shader, texture;
 
-    len = array__len(r->sprites);
-    tex_len = array__len(r->textures);
-    shader_len = array__len(r->shaders);
+    u32 shader, texture;
+    u32 prev_shader, prev_texture;
+
+    len = r->sprites->len;
+    tex_len = r->textures->len;
+    shader_len = r->shaders->len;
 
     if (len != shader_len || len != tex_len)
     {
@@ -128,9 +130,6 @@ sprite_renderer_render(struct sprite_renderer *r)
         return;
     }
 
-    shader = r->shaders[0];
-    texture = r->textures[0];
-
     // TODO: Refactor buffer updates out?
     glBindVertexArray(r->vao);
     glBindBuffer(GL_ARRAY_BUFFER, r->sprite_vbo);
@@ -141,24 +140,29 @@ sprite_renderer_render(struct sprite_renderer *r)
     // glEnable(GL_DEPTH_TEST);
     // glDepthFunc(GL_LESS);
 
-    start = 0;
-    end = 0;
+    start = end = 0;
+
+    prev_shader = *(u32 *)array_first(r->shaders);
+    prev_texture = *(u32 *)array_first(r->textures);
 
     for (i = 0; i < len; ++i, ++end)
     {
-        if (r->shaders[i] != shader || r->textures[i] != texture)
+        shader = *(u32 *)array_get(r->shaders, i);
+        texture = *(u32 *)array_get(r->textures, i);
+
+        if (shader != prev_shader || texture != prev_texture)
         {
             sprite_render_length(r, start, end);
 
             start = i;
             end = 0;
-
-            shader = r->shaders[i];
-            texture = r->textures[i];
         }
+
+        prev_shader = shader;
+        prev_texture = texture;
     }
 
-    sprite_render_length(r, start, end);
+    sprite_render_length(r, start, end + 1);
 
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);

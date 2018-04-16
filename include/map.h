@@ -22,7 +22,7 @@ struct map
 struct map *map_alloc(struct allocator *allocator, u32 capacity);
 void map_free(struct map *m);
 
-bool map_contains(struct map *m, char *key);
+b32 map_contains(struct map *m, char *key);
 
 void *map_get(struct map *m, char *key);
 void map_set(struct map *m, char *key, void *value);

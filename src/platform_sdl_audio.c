@@ -5,7 +5,7 @@
 #include <SDL2/SDL.h>
 
 void
-platform_lock_audio_device(u32 audio_device, bool lock)
+platform_lock_audio_device(u32 audio_device, b32 lock)
 {
     if (lock)
     {
@@ -18,7 +18,7 @@ platform_lock_audio_device(u32 audio_device, bool lock)
 }
 
 void
-platform_pause_audio_device(u32 audio_device, bool pause)
+platform_pause_audio_device(u32 audio_device, b32 pause)
 {
     SDL_PauseAudioDevice(audio_device, pause);
 }

@@ -9,7 +9,7 @@
 void *
 ecs__entity_get_data(struct ecs *ecs, u32 entity)
 {
-    return (void *)((u8 *)ecs->data + (ecs->data_width * entity));
+    return (void *)(array_get(ecs->data, entity));
 }
 
 void
@@ -68,7 +68,7 @@ ecs_finalize(struct ecs *ecs)
         component->offset += component_bytes;
     }
 
-    ecs->data = array__init(ecs->allocator, 0, ecs->data_width);
+    array_alloc(ecs->allocator, 0, ecs->data_width, &(ecs->data));
 
     ecs->initialized = 1;
 }
@@ -154,7 +154,7 @@ ecs_register_component(struct ecs *ecs, char *name, u32 size, u32 *id)
     struct ecs_component c;
 
     c = (struct ecs_component){
-        c.id = ecs->num_components + 1,
+        c.id = ecs->num_components,
         c.name = name,
         c.size = size,
         c.offset = ecs->data_width,
@@ -164,16 +164,17 @@ ecs_register_component(struct ecs *ecs, char *name, u32 size, u32 *id)
 
     if (ecs->components == NULL)
     {
-        array_init(ecs->components, ecs->allocator);
+        array_alloc(ecs->allocator, 0, sizeof(c), &(ecs->components));
     }
 
-    array__grow_to(ecs->components, c.id + 1);
+    array_grow_to(ecs->components, c.id + 1);
 
     log_debug("Registering component (%s, %i).", c.name, c.id);
-    ecs->components[c.id] = c;
-    *id = c.id;
-    ++(array__len(ecs->components));
+    array_set(ecs->components, c.id, &c);
+    ++(ecs->components->len);
     ++(ecs->num_components);
+
+    *id = c.id;
 }
 
 // system
@@ -194,37 +195,45 @@ ecs_register_system(struct ecs *ecs,
     };
 
     bitset_init(&s.entities, ecs->allocator);
-    array_init(s.watched_components, ecs->allocator);
+    array_alloc(ecs->allocator, 0, sizeof(u32), &(s.watched_components));
 
     if (ecs->systems == NULL)
     {
-        array_init(ecs->systems, ecs->allocator);
+        array_alloc(ecs->allocator,
+                    0,
+                    sizeof(struct ecs_system),
+                    &(ecs->systems));
     }
 
-    array__grow_to(ecs->systems, s.id + 1);
+    array_grow_to(ecs->systems, s.id + 1);
 
     log_debug("Registering system (%s, %i)", s.name, s.id);
-    ecs->systems[s.id] = s;
-    *id = s.id;
-    ++(array__len(ecs->systems));
+    array_set(ecs->systems, s.id, &s);
+    ++(ecs->systems->len);
     ++(ecs->num_systems);
+
+    *id = s.id;
 }
 
 void
-ecs_watch(struct ecs *ecs, u32 system, u32 component)
+ecs_watch(struct ecs *ecs, u32 system_id, u32 component_id)
 {
-    array_push(ecs->systems[system].watched_components, component);
+    struct ecs_system *system;
+
+    system = array_get(ecs->systems, system_id);
+    array_push(system->watched_components, &component_id);
 }
 
 void
-ecs_process_system(struct ecs *ecs, u32 system, void *u_data, r32 dt)
+ecs_process_system(struct ecs *ecs, u32 system_id, void *u_data, r32 dt)
 {
-    struct ecs_system *s = &ecs->systems[system];
+    struct ecs_system *system;
     u32 entity;
 
-    bitset_for_each (entity, &s->entities)
+    system = array_get(ecs->systems, system_id);
+    bitset_for_each (entity, &system->entities)
     {
-        s->process(ecs, u_data, entity, dt);
+        system->process(ecs, u_data, entity, dt);
     }
 }
 
@@ -236,11 +245,11 @@ ecs_create_entity(struct ecs *ecs, u32 *entity_ptr)
                  ? ecs->next_entity_id++
                  : sparse_set_pop(&ecs->free_entities);
 
-    u32 cap = array__cap(ecs->data);
+    u32 cap = ecs->data->cap;
 
     if (cap < ecs->next_entity_id)
     {
-        array__grow(ecs->data, ecs->next_entity_id - cap);
+        array_grow_to_at_least(ecs->data, ecs->next_entity_id);
     }
 
     *entity_ptr = id;
@@ -254,36 +263,39 @@ ecs_clone_entity(struct ecs *ecs, u32 entity, u32 *entity_ptr)
 }
 void
 ecs_get_component(struct ecs *ecs,
-                  u32 entity,
-                  u32 component,
+                  u32 entity_id,
+                  u32 component_id,
                   void **component_data_ptr)
 {
-    u8 *entity_data = ecs__entity_get_data(ecs, entity);
-    struct ecs_component *component_info = &(ecs->components[component]);
+    u8 *entity_data;
+    struct ecs_component *component;
+
+    entity_data = ecs__entity_get_data(ecs, entity_id);
+    component = array_get(ecs->components, component_id);
 
     // Component not found
-    if (!bitset_test(entity_data, component))
+    if (!bitset_test(entity_data, component_id))
     {
         return;
     }
 
-    *component_data_ptr = (void *)(entity_data + component_info->offset);
+    *component_data_ptr = (void *)(entity_data + component->offset);
 }
 
 void
 ecs_set_component(struct ecs *ecs,
-                  u32 entity,
-                  u32 component,
+                  u32 entity_id,
+                  u32 component_id,
                   void *component_data)
 {
-    u8 *entity_data = ecs__entity_get_data(ecs, entity);
-    struct ecs_component *component_info = &(ecs->components[component]);
+    u8 *entity_data;
+    struct ecs_component *component;
 
-    bitset_set(entity_data, component);
+    entity_data = ecs__entity_get_data(ecs, entity_id);
+    component = array_get(ecs->components, component_id);
 
-    memcpy((entity_data + component_info->offset),
-           component_data,
-           component_info->size);
+    bitset_set(entity_data, component_id);
+    memcpy((entity_data + component->offset), component_data, component->size);
 }
 
 void

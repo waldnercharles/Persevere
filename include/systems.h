@@ -2,6 +2,7 @@
 #define SYSTEMS_H
 
 #include "ecs.h"
+#include "array.h"
 
 #include "systems/movement_system.h"
 #include "systems/mouse_follow_system.h"
@@ -26,17 +27,20 @@ struct systems
 
 void
 ecs_bind_system_funcs(struct ecs *ecs,
-                      u32 system,
+                      u32 system_id,
                       struct ecs_system_funcs *funcs)
 {
+    struct ecs_system *system;
+
     if (funcs == NULL)
     {
         funcs = &(struct ecs_system_funcs){};
     }
 
-    ecs->systems[system].process_begin = funcs->process_begin;
-    ecs->systems[system].process = funcs->process;
-    ecs->systems[system].process_end = funcs->process_end;
+    system = array_get(ecs->systems, system_id);
+    system->process_begin = funcs->process_begin;
+    system->process = funcs->process;
+    system->process_end = funcs->process_end;
 }
 
 #define bind_system_funcs(ecs, s)                                              \

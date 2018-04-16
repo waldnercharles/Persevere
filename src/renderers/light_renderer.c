@@ -35,11 +35,12 @@ light_renderer__init_light_vbo(struct light_renderer *renderer)
 static void
 light_renderer__init_vao(struct light_renderer *renderer)
 {
-    static const u32 vert_size = sizeof(struct light_vertex);
-    static const u32 pos_off = offsetof(struct light_vertex, pos);
-    static const u32 size_off = offsetof(struct light_vertex, size);
-    static const u32 color_off = offsetof(struct light_vertex, color);
-    static const u32 intensity_off = offsetof(struct light_vertex, intensity);
+    static const u64 vert_size = sizeof(struct light_vertex);
+    static const u64 pos_offset = offsetof(struct light_vertex, pos);
+    static const u64 size_offset = offsetof(struct light_vertex, size);
+    static const u64 color_offset = offsetof(struct light_vertex, color);
+    static const u64 intensity_offset =
+        offsetof(struct light_vertex, intensity);
 
     if (renderer->quad_vbo == 0)
     {
@@ -55,10 +56,15 @@ light_renderer__init_vao(struct light_renderer *renderer)
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, renderer->light_vbo);
-    glVertexAttribPointer(1, 2, GL_FLOAT, 0, vert_size, (void *)pos_off);
-    glVertexAttribPointer(2, 2, GL_FLOAT, 0, vert_size, (void *)size_off);
-    glVertexAttribPointer(3, 3, GL_FLOAT, 0, vert_size, (void *)color_off);
-    glVertexAttribPointer(4, 1, GL_FLOAT, 0, vert_size, (void *)intensity_off);
+    glVertexAttribPointer(1, 2, GL_FLOAT, 0, vert_size, (void *)pos_offset);
+    glVertexAttribPointer(2, 2, GL_FLOAT, 0, vert_size, (void *)size_offset);
+    glVertexAttribPointer(3, 3, GL_FLOAT, 0, vert_size, (void *)color_offset);
+    glVertexAttribPointer(4,
+                          1,
+                          GL_FLOAT,
+                          0,
+                          vert_size,
+                          (void *)intensity_offset);
 
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
@@ -82,7 +88,7 @@ light_renderer_init(struct light_renderer *renderer,
 {
     u32 *vert, *frag;
 
-    array_init(renderer->lights, allocator);
+    array_alloc(allocator, 0, sizeof(struct light_vertex), &(renderer->lights));
 
     light_renderer__init_quad_vbo(renderer);
     light_renderer__init_light_vbo(renderer);
@@ -100,7 +106,7 @@ light_renderer_render(struct light_renderer *renderer, u32 index)
 
     u32 len, cap;
     len = 1;
-    cap = array__cap(renderer->lights);
+    cap = renderer->lights->cap;
 
     glBindVertexArray(renderer->vao);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->light_vbo);

@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -10,7 +9,7 @@ u32 bitset_slot(u32 b) { return b >> 3; }
 u32 bitset_nslots(u32 b) { return (b + 7) >> 3; }
 void bitset_set(u8 *bytes, u32 b) { bytes[bitset_slot(b)] |= bitset_mask(b); }
 void bitset_clear(u8 *bytes, u32 b) { bytes[bitset_slot(b)] &= ~bitset_mask(b); }
-bool bitset_test(u8 *bytes, u32 b) { return bytes[bitset_slot(b)] & bitset_mask(b); }
+b32 bitset_test(u8 *bytes, u32 b) { return bytes[bitset_slot(b)] & bitset_mask(b); }
 // clang-format on
 
 void

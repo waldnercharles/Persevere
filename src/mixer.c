@@ -119,16 +119,16 @@ mixer__process_source(struct mixer *mixer, struct mixer_source *s, s32 length)
         }
 
         /* Work out how many frames we should process in the loop */
-        num_frames = math_min(s->nextfill - 2, s->end) - beg_frame;
+        num_frames = s32_min(s->nextfill - 2, s->end) - beg_frame;
 
         /* Compensate for fixed precision rate difference */
         num_frames = (num_frames << FX_BITS) / s->rate;
 
         /* Process at least 1 frame */
-        num_frames = math_max(num_frames, 1);
+        num_frames = s32_max(num_frames, 1);
 
         /* Do not process more frames than we have length left */
-        num_frames = math_min(num_frames, length / 2);
+        num_frames = s32_min(num_frames, length / 2);
 
         /* Remove frames from length (We process 2 at a time) */
         length -= num_frames * 2;
@@ -180,7 +180,7 @@ mixer__process_source(struct mixer *mixer, struct mixer_source *s, s32 length)
     }
 }
 
-static bool
+static b32
 mixer__check_header(void *data, s32 size, const char *str, s32 offset)
 {
     s32 length = strlen(str);
@@ -301,7 +301,7 @@ mixer__new_source_from_mem(struct mixer *mixer,
                            struct allocator *allocator,
                            void *data,
                            s32 size,
-                           bool ownsdata)
+                           b32 ownsdata)
 {
     struct mixer_source_info info;
     const char *err;
@@ -329,7 +329,7 @@ mixer_get_error(struct mixer *mixer)
 }
 
 void
-mixer_init(struct mixer *mixer, void (*lock)(u32 device, bool lock))
+mixer_init(struct mixer *mixer, void (*lock)(u32 device, b32 lock))
 {
     mixer->err = NULL;
     mixer->sources = NULL;
@@ -404,7 +404,7 @@ mixer_process(struct mixer *mixer, s16 *dest, s32 length)
     for (i = 0; i < length; i++)
     {
         with_gain = (mixer->buffer[i] * mixer->gain) >> FX_BITS;
-        dest[i] = math_clamp(with_gain, -32768, 32767);
+        dest[i] = s32_clamp(with_gain, -32768, 32767);
     }
 }
 
@@ -526,7 +526,7 @@ mixer_set_gain(struct mixer_source *source, r64 gain)
 void
 mixer_set_pan(struct mixer_source *source, r64 pan)
 {
-    source->pan = math_clamp(pan, -1.0, 1.0);
+    source->pan = r64_clamp(pan, -1.0, 1.0);
     mixer__recalculate_source_gain(source);
 }
 
@@ -543,7 +543,7 @@ mixer_set_pitch(struct mixer *mixer, struct mixer_source *source, r64 pitch)
 }
 
 void
-mixer_set_loop(struct mixer_source *source, bool loop)
+mixer_set_loop(struct mixer_source *source, b32 loop)
 {
     source->loop = loop;
 }

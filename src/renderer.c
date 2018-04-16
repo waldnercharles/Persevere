@@ -75,11 +75,11 @@ void
 renderer_init_light_vao(struct renderer *renderer)
 {
     // pos + size + color
-    u32 size = sizeof(v2) + sizeof(v2) + sizeof(v3) + sizeof(r32);
-    u32 pos_offset = 0;
-    u32 size_offset = pos_offset + sizeof(v2);
-    u32 color_offset = size_offset + sizeof(v2);
-    u32 intensity_offset = color_offset + sizeof(v3);
+    static const u64 size = sizeof(v2) + sizeof(v2) + sizeof(v3) + sizeof(r32);
+    static const u64 pos_offset = 0;
+    static const u64 size_offset = pos_offset + sizeof(v2);
+    static const u64 color_offset = size_offset + sizeof(v2);
+    static const u64 intensity_offset = color_offset + sizeof(v3);
 
     glGenVertexArrays(1, &(renderer->vao.light));
     glBindVertexArray(renderer->vao.light);
@@ -112,9 +112,9 @@ renderer_init_light_vao(struct renderer *renderer)
 void
 renderer_init_shadowcaster_vao(struct renderer *renderer)
 {
-    u32 size = sizeof(struct renderer_basic);
-    u32 pos_offset = offsetof(struct renderer_basic, pos);
-    u32 color_offset = offsetof(struct renderer_basic, color);
+    static const u64 size = sizeof(struct renderer_basic);
+    static const u64 pos_offset = offsetof(struct renderer_basic, pos);
+    static const u64 color_offset = offsetof(struct renderer_basic, color);
 
     glGenVertexArrays(1, &(renderer->vao.shadowcaster));
     glBindVertexArray(renderer->vao.shadowcaster);
@@ -135,6 +135,8 @@ renderer_init(struct renderer *renderer,
               struct engine *engine,
               struct allocator *allocator)
 {
+    u32 *fbo_frag, *fbo_vert;
+
     renderer->fbo = alloc(allocator, sizeof(struct fbo));
 
     renderer->sprite_renderer =
@@ -146,7 +148,11 @@ renderer_init(struct renderer *renderer,
     renderer->light_renderer = alloc(allocator, sizeof(struct light_renderer));
 
     // TODO: Do not hardcode the framebuffer size
+
+    fbo_frag = asset_get(engine->assets, "assets/fbo.frag");
+    fbo_vert = asset_get(engine->assets, "assets/fbo.vert");
     fbo_init(renderer->fbo, 512, 512);
+    renderer->fbo->shader = shader_program_link(*fbo_frag, *fbo_vert);
 
     // We render 2d, no need for face-culling
     glDisable(GL_CULL_FACE);
@@ -197,11 +203,11 @@ create_shadowfin(v2 pos)
 }
 
 v2
-get_shadow_vector(v2 pos, r32 radius, v2 edge, s32 step, bool inner)
+get_shadow_vector(v2 pos, r32 radius, v2 edge, s32 step, b32 inner)
 {
     v2 center;
     v2 perp;
-    bool invert;
+    b32 invert;
     r32 rotate_direction;
 
     invert = false;
@@ -266,59 +272,65 @@ create_shadowfins(v2 points[],
                   s32 step,
                   struct shadowfin *shadowfins)
 {
-    u32 i;
-    v2 p0, p1;
-    v2 edge;
+    unused(points);
+    unused(light);
+    unused(start_idx);
+    unused(step);
+    unused(shadowfins);
 
-    struct shadowfin shadowfin;
-    v2 outer, inner;
-    r32 angle;
+    // u32 i;
+    // v2 p0, p1;
+    // v2 edge;
 
-    i = start_idx;
+    // struct shadowfin shadowfin;
+    // v2 outer, inner;
+    // r32 angle;
 
-    while (true)
-    {
-        p1 = points[i];
+    // i = start_idx;
 
-        i = (i - step + 3) % 4;
+    // while (true)
+    // {
+    //     p1 = points[i];
 
-        p0 = points[i];
+    //     i = (i - step + 3) % 4;
 
-        edge = vec2_sub(p1, p0);
-        edge = vec2_norm(edge);
+    //     p0 = points[i];
 
-        shadowfin = create_shadowfin(p0);
-        shadowfin.index = i;
+    //     edge = vec2_sub(p1, p0);
+    //     edge = vec2_norm(edge);
 
-        outer = get_outer_vector(light.pos, 0.1f, p0, step);
-        inner = get_inner_vector(light.pos, 0.1f, p0, step);
+    //     shadowfin = create_shadowfin(p0);
+    //     shadowfin.index = i;
 
-        angle = atan2f(edge.y, edge.x) - atan2f(outer.y, outer.x);
+    //     outer = get_outer_vector(light.pos, 0.1f, p0, step);
+    //     inner = get_inner_vector(light.pos, 0.1f, p0, step);
 
-        if (step == 1)
-        {
-            if (angle < 0 || angle > MATH_PI * 0.5f)
-            {
-                break;
-            }
-        }
-        else if (step == -1)
-        {
-            if (angle > MATH_PI)
-            {
-                angle -= MATH_PI * 2.0f;
-            }
-            if (angle > 0 || angle < -MATH_PI * 0.5f)
-            {
-                break;
-            }
-        }
+    //     angle = atan2f(edge.y, edge.x) - atan2f(outer.y, outer.x);
 
-        shadowfin.outer = outer;
-        shadowfin.inner = vec2_mul(edge, vec2_mag(inner));
+    //     if (step == 1)
+    //     {
+    //         if (angle < 0 || angle > MATH_PI * 0.5f)
+    //         {
+    //             break;
+    //         }
+    //     }
+    //     else if (step == -1)
+    //     {
+    //         if (angle > MATH_PI)
+    //         {
+    //             angle -= MATH_PI * 2.0f;
+    //         }
+    //         if (angle > 0 || angle < -MATH_PI * 0.5f)
+    //         {
+    //             break;
+    //         }
+    //     }
 
-        array_push(shadowfins, shadowfin);
-    }
+    //     shadowfin.outer = outer;
+    //     shadowfin.inner = vec2_mul(edge, vec2_mag(inner));
+
+    //     array_push(shadowfins, shadowfin);
+    // }
 }
 
 void
@@ -330,7 +342,7 @@ render_shadows(v2 points[], v2 light_pos)
 
     v2 curr, prev;
     v2 normal_vector, light_vector;
-    bool prev_frontfacing = false;
+    b32 prev_frontfacing = false;
 
     start_idx = end_idx = -1;
 
@@ -380,5 +392,5 @@ renderer_render(struct renderer *renderer)
     sprite_renderer_render(renderer->sprite_renderer);
     fbo_disable(renderer->fbo);
 
-    fbo_render(renderer, renderer->fbo);
+    fbo_render(renderer->fbo);
 }

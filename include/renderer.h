@@ -57,6 +57,7 @@ struct renderer_shaders
 struct renderer
 {
     struct fbo *fbo;
+    u32 fbo_shader;
 
     struct sprite_renderer *sprite_renderer;
     struct light_renderer *light_renderer;
@@ -64,7 +65,6 @@ struct renderer
 
     struct renderer_vaos vao;
     struct renderer_vbos vbo;
-    struct renderer_shaders shader;
 };
 
 void renderer_init(struct renderer *renderer,

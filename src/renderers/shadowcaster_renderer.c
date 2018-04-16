@@ -37,9 +37,9 @@ shadowcaster_renderer__init_caster_vbo(struct shadowcaster_renderer *renderer)
 static void
 shadowcaster_renderer__init_vao(struct shadowcaster_renderer *renderer)
 {
-    static const u32 size = sizeof(struct shadowcaster_vertex);
-    static const u32 pos_offset = offsetof(struct shadowcaster_vertex, pos);
-    static const u32 size_offset = offsetof(struct shadowcaster_vertex, size);
+    static const u64 size = sizeof(struct shadowcaster_vertex);
+    static const u64 pos_offset = offsetof(struct shadowcaster_vertex, pos);
+    static const u64 size_offset = offsetof(struct shadowcaster_vertex, size);
 
     if (renderer->quad_vbo == 0)
     {
@@ -75,7 +75,10 @@ shadowcaster_renderer_init(struct engine *engine,
 {
     u32 *vert, *frag;
 
-    array_init(renderer->casters, allocator);
+    array_alloc(allocator,
+                0,
+                sizeof(struct shadowcaster_vertex),
+                &(renderer->casters));
 
     shadowcaster_renderer__init_quad_vbo(renderer);
     shadowcaster_renderer__init_caster_vbo(renderer);
@@ -89,12 +92,12 @@ shadowcaster_renderer_init(struct engine *engine,
 void
 shadowcaster_renderer_render(struct shadowcaster_renderer *renderer)
 {
-    static const u32 vert_size = sizeof(struct shadowcaster_vertex);
+    static const u64 vert_size = sizeof(struct shadowcaster_vertex);
 
     u32 len, cap;
 
-    len = array__len(renderer->casters);
-    cap = array__cap(renderer->casters);
+    len = renderer->casters->len;
+    cap = renderer->casters->cap;
 
     glBindVertexArray(renderer->vao);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->caster_vbo);

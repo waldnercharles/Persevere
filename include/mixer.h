@@ -38,9 +38,9 @@ struct mixer_source
     s32 lgain, rgain; /* Left and right gain (fixed point) */
     s32 rate;         /* Playback rate (fixed point) */
     s32 nextfill;     /* Next frame idx where the buffer needs to be filled */
-    bool loop;        /* Whether the source will loop when `end` is reached */
-    bool rewind;      /* Whether the source will rewind before playing */
-    bool active;      /* Whether the source is part of `sources` list */
+    b32 loop;        /* Whether the source will loop when `end` is reached */
+    b32 rewind;      /* Whether the source will rewind before playing */
+    b32 active;      /* Whether the source is part of `sources` list */
     r64 gain;         /* Gain set by `mixer_set_gain()` */
     r64 pan;          /* Pan set by `mixer_set_pan()` */
 };
@@ -68,14 +68,14 @@ struct mixer
     s32 buffer[MIXER_BUFFER_SIZE];
     s32 samplerate;
     s32 gain;
-    void (*lock)(u32 audio_device, bool lock);
+    void (*lock)(u32 audio_device, b32 lock);
     void (*handle_event)(struct mixer_event *event);
     const char *err;
 };
 
 const char *mixer_get_error(struct mixer *mixer);
 
-void mixer_init(struct mixer *mixer, void (*lock)(u32 audio_device, bool lock));
+void mixer_init(struct mixer *mixer, void (*lock)(u32 audio_device, b32 lock));
 
 void mixer_set_event_handler(struct mixer *mixer,
                              void (*handle_event)(struct mixer_event *event));
@@ -109,7 +109,7 @@ void mixer_set_pitch(struct mixer *mixer,
                      struct mixer_source *source,
                      r64 pitch);
 
-void mixer_set_loop(struct mixer_source *source, bool loop);
+void mixer_set_loop(struct mixer_source *source, b32 loop);
 void mixer_play(struct mixer *mixer, struct mixer_source *source);
 void mixer_pause(struct mixer_source *source);
 void mixer_stop(struct mixer_source *source);

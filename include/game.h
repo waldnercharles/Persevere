@@ -3,7 +3,7 @@
 #include "std.h"
 #include "engine.h"
 
-void game_start(struct engine *engine);
-void game_loop(struct engine *engine, r32 dt);
+export void game_start(struct engine *engine);
+export void game_loop(struct engine *engine, r32 dt);
 
 #endif

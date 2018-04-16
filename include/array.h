@@ -9,39 +9,41 @@ struct array
     u32 cap;
     u32 element_size;
     struct allocator *allocator;
+    u8 *data;
 };
 
-#define array_set_cap(a, n)                                                    \
-    ((a) == NULL                                                               \
-         ? array__grow(a, n)                                                   \
-         : ((array__cap(a) > n) ? (a) : array__grow(a, n - array__cap(a))))
+void *array_get(struct array *a, u32 idx);
+void array_set(struct array *a, u32 idx, const void *val);
+void array_set_many(struct array *a, u32 idx, const void *val, u32 n);
+void array_insert(struct array *a, u32 idx, const void *val);
+void array_remove(struct array *a, u32 idx);
+void array_remove_range(struct array *a, u32 first_idx, u32 last_idx);
+void array_append(struct array *a, const void *vals, u32 n);
+void array_push(struct array *a, const void *val);
+void *array_pop(struct array *a);
+void *array_first(struct array *a);
+void *array_last(struct array *a);
+void *array_begin(struct array *a);
+void *array_next(struct array *a, void *i);
+void *array_end(struct array *a);
+b32 array_empty(struct array *a);
+u32 array_size(struct array *a);
+void array_clear(struct array *a);
 
-// clang-format off
-#define array_init(a,alloc)     ((a)=array__init(alloc,0,sizeof(*(a))))
-// #define array_initn(a,alloc,n)  ((a)=array__init(alloc,n,sizeof(*(a))))
-#define array_free(a)           (dealloc(array__raw(a)->allocator, array__raw(a)),NULL)
-#define array_push(a,v)         (array__grow_if_required(a,1), (a)[array__len(a)++] = (v))
-#define array_pop(a)            ((a)[--array__len(a)])
-#define array_deleten(a,i,n)    (array__delete_len_internal(a,i,n))
-#define array_delete(a,i)       (array__delete_len_internal(a,i,1))
-#define array_delete_fast(a,i)  ((a)[i]=array_pop(a))
-#define array_add(a,n,sz)       (array__grow_if_required(a,n), array__len(a)+=(n), &(a)[array__len(a)-(n)])
-#define array_count(a)          (array__len(a))
+void array_alloc(struct allocator *allocator,
+                 u32 cap,
+                 u32 element_size,
+                 struct array **a);
 
-#define array__raw(a)           ((struct array *)(a) - 1)
-#define array__len(a)           (array__raw(a)->len)
-#define array__cap(a)           (array__raw(a)->cap)
-#define array__element_size(a)  (array__raw(a)->element_size)
+void array_free(struct array *a);
 
-#define array__grow_required(a,n)     ((a)==NULL || array__len(a)+(n) >= array__cap(a))
-#define array__grow(a,n)              ((a)=array__grow_internal((a),(n)))
-#define array__grow_if_required(a,n)  (array__grow_required(a,n) ? array__grow(a,n) : 0)
-#define array__grow_to(a,cap)         (cap > array__cap(a) ? array__grow(a,cap-array__cap(a)) : 0)
+void array_grow(struct array *a);
+void array_grow_to(struct array *a, u32 len);
+void array_grow_to_at_least(struct array *a, u32 len);
+void array_grow_by(struct array *a, u32 n);
+void array_grow_by_at_least(struct array *a, u32 n);
 
-#define array_for_each(v,a)  for((v)=(a); (v)<(a)+array__len(a); ++(v))
-// clang-format on
+#define array_for_each(i, a)                                                   \
+    for ((i) = array_begin(a); (i) != array_end(a); (i) = array_next(a, i))
 
-void *array__init(struct allocator *allocator, u32 cap, u32 element_size);
-void *array__grow_internal(void *arr, u32 inc);
-void array__delete_len_internal(void *arr, u32 idx, u32 n);
 #endif

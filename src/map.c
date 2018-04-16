@@ -121,7 +121,7 @@ map_free(struct map *m)
     // free(m->buckets);
 }
 
-bool
+b32
 map_contains(struct map *m, char *key)
 {
     return map_get_node_ptr(m, key) != NULL;

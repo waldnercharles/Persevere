@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -73,7 +72,7 @@ file__compare(FILE *f1, FILE *f2)
     {
         size1 = fread(buf1, 1, sizeof(buf1), f1);
         size2 = fread(buf2, 1, sizeof(buf2), f2);
-        cmp = memcmp(buf1, buf2, math_min(size1, size2));
+        cmp = memcmp(buf1, buf2, u32_min(size1, size2));
 
         if (cmp != 0)
         {
@@ -132,7 +131,7 @@ file_compare(const char *filename1, const char *filename2)
     return file__compare(f1, f2);
 }
 
-bool
+b32
 file_equals(const char *filename1, const char *filename2)
 {
     FILE *f1 = fopen(filename1, "rb");
@@ -195,7 +194,7 @@ file_copy(const char *from, const char *to)
     fclose(f2);
 }
 
-bool
+b32
 file_exists(const char *filename)
 {
     struct stat buf;

@@ -1,6 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
-#include <dirent.h>
+#include "dirent.h"
 
 #include "asset.h"
 #include "array.h"
@@ -14,7 +14,7 @@ asset_init(struct asset_manager *am, struct allocator *allocator)
     am->allocator = allocator;
     am->map = map_alloc(allocator, 64);
 
-    array_init(am->handlers, allocator);
+    array_alloc(allocator, 0, sizeof(struct asset_handler), &(am->handlers));
 }
 
 void
@@ -67,7 +67,7 @@ asset_get(struct asset_manager *am, char *filename)
     }
 
     ext = strrchr(filename, '.') + 1;
-    if (array_count(am->handlers) > 0)
+    if (am->handlers->len > 0)
     {
         array_for_each (handler, am->handlers)
         {
@@ -98,5 +98,5 @@ asset_add_handler(struct asset_manager *am,
     h.load_asset = load_func;
     h.unload_asset = unload_func;
     h.user_data = user_data;
-    array_push(am->handlers, h);
+    array_push(am->handlers, &h);
 }

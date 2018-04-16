@@ -35,7 +35,7 @@ struct ecs_system
     void (*process)(struct ecs *ecs, void *u_data, u32 entity, r32 dt);
     void (*process_end)(struct ecs *ecs, void *u_data);
 
-    u32 *watched_components;
+    struct array *watched_components;  // u32
     struct bitset entities;
 };
 
@@ -50,13 +50,13 @@ struct ecs_component
 
 struct ecs
 {
-    bool initialized;
+    b32 initialized;
     struct allocator *allocator;
 
     u32 data_width;
     u32 data_len;
     u32 data_cap;
-    void *data;
+    struct array *data;
 
     struct sparse_set added_entities;
     struct sparse_set enabled_entities;
@@ -70,10 +70,10 @@ struct ecs
     struct sparse_set free_entities;
 
     u32 num_components;
-    struct ecs_component *components;
+    struct array *components;  // struct ecs_component
 
     u32 num_systems;
-    struct ecs_system *systems;
+    struct array *systems;  // struct system
 
     void *system_handles;
     void *component_handles;
@@ -112,6 +112,6 @@ void ecs_set_component(struct ecs *ecs,
                        void *component_data);
 
 void ecs_rem_component(struct ecs *ecs, u32 entity, u32 component);
-void ecs_set_state(struct ecs *ecs, u32 entity, u32 state);
+void ecs_set_state(struct ecs *ecs, u32 entity, enum ecs_state state);
 
 #endif

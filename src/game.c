@@ -45,149 +45,129 @@ game_register_systems(struct ecs *ecs)
 }
 
 void
-game_start(struct engine *engine)
+create_tiles(struct engine *engine)
 {
-    struct components *components = engine->ecs->component_handles;
-
-    u32 entity;
+    struct components *c = engine->ecs->component_handles;
     struct position position;
     struct quad quad;
-    struct material material;
-    struct light light;
-    struct shadowcaster shadowcaster;
-    struct mouse_follow mouse_follow;
-    // struct light light = { 0 };
+    struct material mat;
+    u32 entity, i, j;
 
     u32 shader, *frag, *vert;
-    u32 border_shader, *border_frag, *border_vert;
-    struct mixer_source *chopin;
     struct renderer_texture *spritesheet;
 
     r32 tile_width = 1.0f / 32.0f;
 
-    chopin = asset_get(engine->assets, "assets/chopin.ogg");
     frag = asset_get(engine->assets, "assets/shader.frag");
     vert = asset_get(engine->assets, "assets/shader.vert");
-    border_frag = asset_get(engine->assets, "assets/border.frag");
-    border_vert = asset_get(engine->assets, "assets/border.vert");
+    shader = shader_program_link(*vert, *frag);
+
     spritesheet = asset_get(engine->assets, "assets/industrial.png");
 
-    shader = shader_program_link(*vert, *frag);
-    border_shader = shader_program_link(*border_vert, *border_frag);
+    quad.size = vec2(2.0f / 16.0f, 2.0f / 16.0f);
+    mat.shader = shader;
+    mat.texture = spritesheet->id;
+    mat.uv_offset = vec2(0 * tile_width, 15 * tile_width);
 
-    mixer_set_loop(chopin, 1);
-    mixer_play(engine->mixer, chopin);
-
-    game_register_components(engine->ecs);
-    game_register_systems(engine->ecs);
-
-    ecs_finalize(engine->ecs);
-
-    material =
-        (struct material){ .shader = shader,
-                           .texture = spritesheet->id,
-                           .uv_offset = vec2(0 * tile_width, 15 * tile_width) };
-
-    s32 i, j;
-
-    quad = (struct quad){ .size = vec2(2.0f / 16.0f, 2.0f / 16.0f) };
     for (i = 0; i < 16; ++i)
     {
         for (j = 0; j < 16; ++j)
         {
-            position = (struct position){
-                .pos =
-                    vec3(i * quad.size.x - 1.0f, j * quad.size.y - 1.0f, 0.5f),
-            };
+            position.pos =
+                vec3(i * quad.size.x - 1.0f, j * quad.size.y - 1.0f, 0.0f);
 
             position.pos.x += quad.size.x / 2.0f;
             position.pos.y += quad.size.y / 2.0f;
 
             ecs_create_entity(engine->ecs, &entity);
 
-            ecs_set_component(engine->ecs,
-                              entity,
-                              components->position,
-                              &position);
-
-            ecs_set_component(engine->ecs, entity, components->quad, &quad);
-
-            ecs_set_component(engine->ecs,
-                              entity,
-                              components->material,
-                              &material);
+            ecs_set_component(engine->ecs, entity, c->position, &position);
+            ecs_set_component(engine->ecs, entity, c->quad, &quad);
+            ecs_set_component(engine->ecs, entity, c->material, &mat);
 
             ecs_set_state(engine->ecs, entity, ECS_STATE_ADDED);
         }
     }
+}
 
-    // cursor
-    position = (struct position){ .pos = vec3(0.0f, 0.0f, 0.0f) };
-    mouse_follow =
-        (struct mouse_follow){ .snap_num_tiles_x = 16, .snap_num_tiles_y = 16 };
-    material =
-        (struct material){ .shader = border_shader,
-                           .texture = 0,
-                           .uv_offset = vec2(0 * tile_width, 15 * tile_width) };
+void
+create_cursor(struct engine *engine)
+{
+    struct components *c = engine->ecs->component_handles;
+    struct position position;
+    struct quad quad;
+    struct material mat;
+    struct mouse_follow follow;
+    u32 entity;
 
-    ecs_create_entity(engine->ecs, &entity);
-    ecs_set_component(engine->ecs, entity, components->position, &position);
-    ecs_set_component(engine->ecs,
-                      entity,
-                      components->mouse_follow,
-                      &mouse_follow);
-    ecs_set_component(engine->ecs, entity, components->quad, &quad);
-    ecs_set_component(engine->ecs, entity, components->material, &material);
-    ecs_set_state(engine->ecs, entity, ECS_STATE_ADDED);
+    u32 sprite_shader, *sprite_frag, *sprite_vert;
+    u32 border_shader, *border_frag, *border_vert;
+    struct renderer_texture *spritesheet;
 
-    position = (struct position){ .pos = vec3(0.0f, 0.0f, -0.5f) };
-    mouse_follow =
-        (struct mouse_follow){ .snap_num_tiles_x = 0, .snap_num_tiles_y = 0 };
-    material =
-        (struct material){ .shader = shader,
-                           .texture = spritesheet->id,
-                           .uv_offset = vec2(9 * tile_width, 21 * tile_width) };
+    r32 tile_width = 1.0f / 32.0f;
 
-    ecs_create_entity(engine->ecs, &entity);
-    ecs_set_component(engine->ecs, entity, components->position, &position);
-    ecs_set_component(engine->ecs,
-                      entity,
-                      components->mouse_follow,
-                      &mouse_follow);
-    ecs_set_component(engine->ecs, entity, components->quad, &quad);
-    ecs_set_component(engine->ecs, entity, components->material, &material);
-    ecs_set_state(engine->ecs, entity, ECS_STATE_ADDED);
+    // TODO: Do not link the same combination of frag and vert twice.
+    sprite_frag = asset_get(engine->assets, "assets/shader.frag");
+    sprite_vert = asset_get(engine->assets, "assets/shader.vert");
+    sprite_shader = shader_program_link(*sprite_vert, *sprite_frag);
 
-    // lights
-    position = (struct position){ .pos = vec3(0.0f, 0.0f, 0.0f) };
-    light = (struct light){ .color = vec3(1.0f, 1.0f, 1.0f),
-                            .intensity = 1.0f,
-                            .light_radius = 1.0f,
-                            .physical_radius = 0.05f,
-                            .depth = 0.0f };
+    border_frag = asset_get(engine->assets, "assets/border.frag");
+    border_vert = asset_get(engine->assets, "assets/border.vert");
+    border_shader = shader_program_link(*border_vert, *border_frag);
+
+    spritesheet = asset_get(engine->assets, "assets/industrial.png");
+
+    quad.size = vec2(2.0f / 16.0f, 2.0f / 16.0f);
+    position.pos = vec3(0.0f, 0.0f, 1.0f);
+
+    follow.snap_num_tiles_x = 16;
+    follow.snap_num_tiles_y = 16;
+
+    mat.shader = border_shader;
+    mat.texture = 0;
+    mat.uv_offset = vec2(0, 0);
 
     ecs_create_entity(engine->ecs, &entity);
-    ecs_set_component(engine->ecs, entity, components->position, &position);
-    ecs_set_component(engine->ecs, entity, components->light, &light);
+    ecs_set_component(engine->ecs, entity, c->position, &position);
+    ecs_set_component(engine->ecs, entity, c->mouse_follow, &follow);
+    ecs_set_component(engine->ecs, entity, c->quad, &quad);
+    ecs_set_component(engine->ecs, entity, c->material, &mat);
     ecs_set_state(engine->ecs, entity, ECS_STATE_ADDED);
 
-    // shadowcasters
-    position = (struct position){ .pos = vec3(0.5f, 0.5f, 0.0f) };
-    shadowcaster = (struct shadowcaster){ .size = vec2(0.1f, 0.1f) };
+    position.pos = vec3(0.0f, 0.0f, 2.0f);
+
+    follow.snap_num_tiles_x = 0;
+    follow.snap_num_tiles_y = 0;
+
+    mat.shader = sprite_shader;
+    mat.texture = spritesheet->id;
+    mat.uv_offset = vec2(9 * tile_width, 21 * tile_width);
 
     ecs_create_entity(engine->ecs, &entity);
-    ecs_set_component(engine->ecs, entity, components->position, &position);
-    ecs_set_component(engine->ecs,
-                      entity,
-                      components->shadowcaster,
-                      &shadowcaster);
+    ecs_set_component(engine->ecs, entity, c->position, &position);
+    ecs_set_component(engine->ecs, entity, c->mouse_follow, &follow);
+    ecs_set_component(engine->ecs, entity, c->quad, &quad);
+    ecs_set_component(engine->ecs, entity, c->material, &mat);
     ecs_set_state(engine->ecs, entity, ECS_STATE_ADDED);
+}
 
-    // body.size = vec2(1.0f, 1.0f);    ecs_create_entity(engine->ecs, &entity);
-    // ecs_set_component(engine->ecs, entity, component_position_id, &position);
-    // ecs_set_component(engine->ecs, entity, component_light_id, &light);
+void
+game_start(struct engine *engine)
+{
+    // struct mixer_source *chopin;
 
-    // ecs_set_state(engine->ecs, entity, ECS_STATE_ADDED);
+    // chopin = asset_get(engine->assets, "assets/chopin.ogg");
+
+    // mixer_set_loop(chopin, 1);
+    // mixer_play(engine->mixer, chopin);
+
+    game_register_components(engine->ecs);
+    game_register_systems(engine->ecs);
+
+    ecs_finalize(engine->ecs);
+
+    create_tiles(engine);
+    create_cursor(engine);
 }
 
 void

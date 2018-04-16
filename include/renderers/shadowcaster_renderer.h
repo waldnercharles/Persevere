@@ -20,7 +20,7 @@ struct shadowcaster_renderer
     u32 quad_vbo;
     u32 caster_vbo;
 
-    struct shadowcaster_vertex *casters;
+    struct array *casters;  // struct shadowcaster_vertex
 
     u32 shader;
 };

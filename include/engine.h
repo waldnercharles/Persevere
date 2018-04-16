@@ -18,7 +18,7 @@ struct controller
     void *controller;
     void *haptic;
     s32 joystick_id;
-    bool connected;
+    b32 connected;
 };
 
 struct engine
@@ -32,10 +32,16 @@ struct engine
 
     struct controller controllers[MAX_CONTROLLERS];
 
-    bool running;
+    b32 running;
 };
 
-void engine_init(struct platform *platform, struct engine **engine);
-void engine_refresh_bindings(struct engine *engine);
+void engine_open_audio_device(struct platform_api *api, struct mixer *mixer);
+void engine_close_audio_device(struct platform_api *api, struct mixer *mixer);
 
+export void engine_init(struct platform *platform, struct engine **engine);
+
+export void engine_bind(struct engine *engine);
+export void engine_unbind(struct engine *engine);
+
+export void engine_resize(struct engine *engine);
 #endif

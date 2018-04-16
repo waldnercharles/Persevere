@@ -23,7 +23,7 @@ struct asset_manager
 {
     struct allocator *allocator;
     struct map *map;
-    struct asset_handler *handlers;
+    struct array *handlers;  // struct asset_handler
 };
 
 struct asset_handle

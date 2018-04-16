@@ -7,6 +7,8 @@
 #define TMP_FILE "./temp-" GAME_TITLE ".dll"
 #define LOCK_FILE "./" GAME_TITLE ".lock"
 
+void *platform_load_func(void *handle, const char *func);
+
 void
 platform_unload_dll(struct game_dll *dll)
 {
@@ -32,20 +34,30 @@ platform_load_dll(struct game_dll *dll)
         return;
     }
 
-    dll->api->init = SDL_LoadFunction(dll->handle, "engine_init");
-    dll->api->start = SDL_LoadFunction(dll->handle, "game_start");
-    dll->api->loop = SDL_LoadFunction(dll->handle, "game_loop");
-    dll->api->unbind = SDL_LoadFunction(dll->handle, "engine_unbind");
-    dll->api->bind = SDL_LoadFunction(dll->handle, "engine_bind");
-
-    if (dll->api->loop == NULL)
-    {
-        err = SDL_GetError();
-        log_warning("Couldn't load game_loop: %s", err);
-        return;
-    }
+    dll->api->start = platform_load_func(dll->handle, "game_start");
+    dll->api->loop = platform_load_func(dll->handle, "game_loop");
+    dll->api->init = platform_load_func(dll->handle, "engine_init");
+    dll->api->unbind = platform_load_func(dll->handle, "engine_unbind");
+    dll->api->bind = platform_load_func(dll->handle, "engine_bind");
+    dll->api->resize = platform_load_func(dll->handle, "engine_resize");
 
     dll->write_time = file_write_time(TMP_FILE);
+}
+
+void *
+platform_load_func(void *handle, const char *func)
+{
+    const char *err;
+    void *func_ptr;
+
+    func_ptr = SDL_LoadFunction(handle, func);
+    if (func_ptr == NULL)
+    {
+        err = SDL_GetError();
+        log_error("Unable to load %s: %s", func, err);
+    }
+
+    return func_ptr;
 }
 
 void

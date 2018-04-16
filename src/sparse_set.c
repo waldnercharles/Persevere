@@ -73,7 +73,7 @@ sparse_set_clear(struct sparse_set *s)
     s->population = 0;
 }
 
-bool
+b32
 sparse_set_is_empty(struct sparse_set *s)
 {
     return s->population == 0;

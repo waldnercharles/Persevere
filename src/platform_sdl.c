@@ -5,6 +5,8 @@
 #include "platform.h"
 #include "engine.h"
 
+#include <GL/glew.h>
+
 #include "allocators/allocator.c"
 #include "allocators/linear_allocator.c"
 #include "file.c"
@@ -124,7 +126,7 @@ main()
     time_step = 1000.0f / 60.0f;
     accumulator = 0.0f;
 
-    while (platform_handle_events(engine))
+    while (platform_handle_events(dll, engine))
     {
         platform_load_latest_dll(dll, engine);
 
@@ -136,7 +138,7 @@ main()
         curr_time = SDL_GetTicks();
 
         frame_time = curr_time - prev_time;
-        frame_time = math_max(frame_time, 250);
+        frame_time = u32_max(frame_time, 250);
 
         prev_time = curr_time;
         accumulator += frame_time;

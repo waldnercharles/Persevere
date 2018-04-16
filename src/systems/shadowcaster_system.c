@@ -17,7 +17,7 @@ shadowcaster_system_process_begin(struct ecs *ecs, void *u_data)
     engine = u_data;
     renderer = engine->renderer->shadowcaster_renderer;
 
-    array__len(renderer->casters) = 0;
+    renderer->casters->len = 0;
 }
 
 void
@@ -47,5 +47,5 @@ shadowcaster_system_process(struct ecs *ecs, void *u_data, u32 entity, r32 dt)
     vertex.pos = *position;
     vertex.size = shadowcaster->size;
 
-    array_push(renderer->casters, vertex);
+    array_push(renderer->casters, &vertex);
 }

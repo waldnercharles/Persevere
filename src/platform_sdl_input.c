@@ -2,6 +2,8 @@
 #include "log.h"
 #include "engine.h"
 
+#include "platform_dll.h"
+
 void
 platform_open_controller(struct engine *engine, s32 joystick_index)
 {
@@ -97,8 +99,8 @@ platform_open_all_controllers(struct engine *engine)
     }
 }
 
-bool
-platform_handle_events(struct engine *engine)
+b32
+platform_handle_events(struct game_dll *dll, struct engine *engine)
 {
     SDL_Event event;
     while (SDL_PollEvent(&event))
@@ -121,6 +123,12 @@ platform_handle_events(struct engine *engine)
                     case SDL_WINDOWEVENT_SIZE_CHANGED:
                         engine->platform->window_size_x = event.window.data1;
                         engine->platform->window_size_y = event.window.data2;
+
+                        dll->api->resize(engine);
+
+                        log_debug("Resized (%i, %i)",
+                                  event.window.data1,
+                                  event.window.data2);
                         break;
                 }
                 break;

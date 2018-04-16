@@ -18,9 +18,9 @@ struct sprite_renderer
     u32 quad_vbo;
     u32 sprite_vbo;
 
-    struct sprite_vertex *sprites;
-    u32 *textures;
-    u32 *shaders;
+    struct array *sprites;   // struct sprite_vertex
+    struct array *textures;  // u32
+    struct array *shaders;   // u32
 };
 
 void sprite_renderer_init(struct sprite_renderer *r,

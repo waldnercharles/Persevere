@@ -4,7 +4,7 @@
 v2
 get_outer_vector(struct light light, v2 pos, s32 direction)
 {
-    bool invert;
+    b32 invert;
     v2 center_vec, perp_vec;
     r32 theta;
 

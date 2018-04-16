@@ -1,17 +1,21 @@
 #ifndef STD_H
 #define STD_H
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <assert.h>
+#include <errno.h>
+#include <limits.h>
+#include <math.h>
+#include <malloc.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
-#include <limits.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <time.h>
+
+#include <GL/glew.h>
 
 #if !defined(_WIN32) && !defined(_WIN64)
 #include <unistd.h>
@@ -19,18 +23,14 @@
 #define stat _stat
 #endif
 
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-
-typedef int8_t s8;
-typedef int16_t s16;
-typedef int32_t s32;
-typedef int64_t s64;
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
+typedef signed char s8;
+typedef signed short s16;
+typedef signed int s32;
+typedef signed long long s64;
+typedef unsigned char u8;
+typedef unsigned short u16;
+typedef unsigned int u32;
+typedef unsigned long long u64;
 typedef float r32;
 typedef double r64;
 typedef bool b32;
@@ -40,5 +40,7 @@ typedef bool b32;
 #define kilobytes(x) (x * 1024L)
 #define megabytes(x) (kilobytes(x) * 1024L)
 #define gigabytes(x) (megabytes(x) * 1024L)
+
+#define export __declspec(dllexport)
 
 #endif

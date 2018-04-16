@@ -57,8 +57,6 @@ shader_program_link(u32 vert_shader, u32 frag_shader)
     }
     glDetachShader(program, vert_shader);
     glDetachShader(program, frag_shader);
-    glDeleteShader(vert_shader);
-    glDeleteShader(frag_shader);
     return program;
 }
 

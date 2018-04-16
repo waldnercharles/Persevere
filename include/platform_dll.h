@@ -11,6 +11,8 @@ struct game_api
 
     void (*unbind)(struct engine *engine);
     void (*bind)(struct engine *engine);
+
+    void (*resize)(struct engine *engine);
 };
 
 struct game_dll

@@ -6,13 +6,15 @@
 #include "systems.h"
 #include "components.h"
 
+#include "fbo.h"
+
 #include "allocators/allocator.h"
 
 #include "assets/sound_asset.h"
 #include "assets/shader_asset.h"
 #include "assets/texture_asset.h"
 
-void
+static void
 engine__mixer_event_handler(struct mixer_event *e)
 {
     switch (e->type)
@@ -24,7 +26,7 @@ engine__mixer_event_handler(struct mixer_event *e)
     }
 }
 
-void
+static void
 engine__audio_callback(void *userdata, u8 *stream, s32 len)
 {
     struct mixer *mixer = userdata;
@@ -67,7 +69,7 @@ engine_close_audio_device(struct platform_api *api, struct mixer *mixer)
     }
 }
 
-void
+static void
 engine_audio_init(struct engine *engine)
 {
     struct mixer *mixer;
@@ -86,7 +88,7 @@ engine_audio_init(struct engine *engine)
     engine->mixer = mixer;
 }
 
-void
+static void
 engine_ecs_init(struct engine *engine)
 {
     struct ecs *ecs;
@@ -105,13 +107,10 @@ engine_ecs_init(struct engine *engine)
     engine->ecs = ecs;
 }
 
-void
+static void
 engine_renderer_init(struct engine *engine)
 {
     struct renderer *renderer;
-
-    u32 *basic_frag, *basic_vert;
-    u32 *fbo_frag, *fbo_vert;
 
     if (engine->assets == NULL)
     {
@@ -125,18 +124,10 @@ engine_renderer_init(struct engine *engine)
 
     renderer_init(renderer, engine, engine->platform->memory->permanent);
 
-    basic_frag = asset_get(engine->assets, "assets/basic.frag");
-    basic_vert = asset_get(engine->assets, "assets/basic.vert");
-    renderer->shader.basic = shader_program_link(*basic_frag, *basic_vert);
-
-    fbo_frag = asset_get(engine->assets, "assets/fbo.frag");
-    fbo_vert = asset_get(engine->assets, "assets/fbo.vert");
-    renderer->shader.fbo = shader_program_link(*fbo_frag, *fbo_vert);
-
     engine->renderer = renderer;
 }
 
-void
+static void
 engine_asset_init(struct engine *engine)
 {
     struct platform *platform = engine->platform;
@@ -215,5 +206,17 @@ engine_bind(struct engine *engine)
                       system->name,
                       system->id);
         }
+    }
+}
+
+void
+engine_resize(struct engine *engine)
+{
+    if (engine != NULL && engine->renderer != NULL &&
+        engine->renderer->fbo != NULL)
+    {
+        fbo_resize(engine->renderer->fbo,
+                   engine->platform->window_size_x,
+                   engine->platform->window_size_y);
     }
 }

@@ -31,8 +31,8 @@ struct platform_api
 
     void (*close_audio_device)(u32 audio_device);
 
-    void (*pause_audio_device)(u32 audio_device, bool pause);
-    void (*lock_audio_device)(u32 audio_device, bool lock);
+    void (*pause_audio_device)(u32 audio_device, b32 pause);
+    void (*lock_audio_device)(u32 audio_device, b32 lock);
 };
 
 struct mouse

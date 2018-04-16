@@ -20,7 +20,7 @@ struct light_renderer
     u32 quad_vbo;
     u32 light_vbo;
 
-    struct light_vertex *lights;
+    struct array *lights;  // light_vertex
 
     u32 shader;
 };

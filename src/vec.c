@@ -35,21 +35,21 @@
 v2
 vec2(r32 x, r32 y)
 {
-    v2 v = { x, y };
+    v2 v = (v2){ { x, y } };
     return v;
 }
 
 v3
 vec3(r32 x, r32 y, r32 z)
 {
-    v3 v = { x, y, z };
+    v3 v = (v3){ { x, y, z } };
     return v;
 }
 
 v4
 vec4(r32 x, r32 y, r32 z, r32 w)
 {
-    v4 v = { x, y, z, w };
+    v4 v = (v4){ { x, y, z, w } };
     return v;
 }
 
@@ -464,7 +464,7 @@ math_radians(r32 degrees)
     return degrees * (MATH_PI / 180.0f);
 }
 
-bool
+b32
 math_is_pow2(u32 n)
 {
     return n && !(n & (n - 1));

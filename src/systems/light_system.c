@@ -18,7 +18,7 @@ light_system_process_begin(struct ecs *ecs, void *u_data)
     engine = u_data;
 
     renderer = engine->renderer->light_renderer;
-    array__len(renderer->lights) = 0;
+    renderer->lights->len = 0;
 }
 
 void
@@ -49,5 +49,5 @@ light_system_process(struct ecs *ecs, void *u_data, u32 entity, r32 dt)
     vertex.color = light->color;
     vertex.intensity = light->intensity;
 
-    array_push(renderer->lights, vertex);
+    array_push(renderer->lights, &vertex);
 }

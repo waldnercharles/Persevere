@@ -29,7 +29,7 @@ char *string_assign(char *str, char *cstr);
 
 char *string_grow(char *str, u32 add_len);
 
-bool string_strings_are_equal(char *lhs, char *rhs);
+b32 string_strings_are_equal(char *lhs, char *rhs);
 
 #define string_get_header(s) ((struct string_header *)s - 1)
 #endif

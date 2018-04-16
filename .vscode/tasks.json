@@ -2,14 +2,21 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
-    "tasks": [
-        {
-            "taskName": "build",
-            "type": "shell",
-            "command": "make -j3",
-            "problemMatcher": [
-                "$gcc"
-            ]
-        }
-    ]
+    "windows": {
+        "command": "build.bat",
+        "type": "shell",
+        "presentation": {
+            "echo": false,
+            "reveal": "always",
+            "focus": true,
+            "panel": "dedicated"
+        },
+    },
+    "problemMatchers": [
+        "$gcc"
+    ],
+    "group": {
+        "kind": "build",
+        "isDefault": true
+    }
 }

@@ -5,11 +5,11 @@
             "includePath": [
                 "${workspaceRoot}/src",
                 "${workspaceRoot}/include",
-                "${workspaceRoot}/third_party",
-                "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.10.25017/include",
-                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.10240.0/ucrt",
-                "C:/Program Files (x86)/Windows Kits/8.1/Include/shared",
-                "C:/Program Files (x86)/Windows Kits/8.1/Include/um"
+                "${workspaceRoot}/third_party/include",
+                "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.12.25827/include",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.16299.0/shared",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.16299.0/ucrt",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.16299.0/um"
             ],
             "defines": [
                 "_DEBUG",
@@ -20,15 +20,17 @@
                 "path": [
                     "${workspaceRoot}/src",
                     "${workspaceRoot}/include",
-                    "${workspaceRoot}/third_party",
-                    "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.10.25017/include",
-                    "C:/Program Files (x86)/Windows Kits/10/Include/10.0.10240.0/ucrt",
-                    "C:/Program Files (x86)/Windows Kits/8.1/Include/shared",
-                    "C:/Program Files (x86)/Windows Kits/8.1/Include/um"
+                    "${workspaceRoot}/third_party/include",
+                    "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.12.25827/include",
+                    "C:/Program Files (x86)/Windows Kits/10/Include/10.0.16299.0/shared",
+                    "C:/Program Files (x86)/Windows Kits/10/Include/10.0.16299.0/ucrt",
+                    "C:/Program Files (x86)/Windows Kits/10/Include/10.0.16299.0/um"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": "./intelli.db"
-            }
+            },
+            "cStandard": "c99",
+            "cppStandard": "c++17"
         }
     ],
     "version": 3
